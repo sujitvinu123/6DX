@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AERO-TWIN — Mission Replay | Flight Data Analysis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Geist:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/aero-twin.css">
+    <style>
+        .replay-banner { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:linear-gradient(90deg, rgba(59,130,246,0.06), rgba(99,102,241,0.04)); border:1px solid rgba(59,130,246,0.2); border-radius:6px; margin-bottom:4px; }
+        .replay-badge { display:inline-flex; align-items:center; gap:6px; padding:5px 14px; background:rgba(59,130,246,0.1); color:#3b82f6; border:1px solid rgba(59,130,246,0.3); border-radius:4px; font-family:var(--font-mono); font-size:10px; font-weight:700; }
+        .replay-badge .pulse { width:8px; height:8px; border-radius:50%; background:#3b82f6; animation: rpulse 1.5s ease-in-out infinite; }
+        @keyframes rpulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+
+        .timeline-container { padding:20px; }
+        .scrubber-track { position:relative; height:8px; background:#e2e8f0; border-radius:4px; cursor:pointer; }
+        .scrubber-fill { position:absolute; top:0; left:0; height:100%; background:linear-gradient(90deg, #3b82f6, #6366f1); border-radius:4px; transition:width 0.2s; }
+        .scrubber-thumb { position:absolute; top:-6px; width:20px; height:20px; background:#fff; border:3px solid #3b82f6; border-radius:50%; box-shadow:0 2px 8px rgba(59,130,246,0.3); cursor:grab; transition:left 0.2s; }
+        .scrubber-input { position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; z-index:2; margin:0; }
+
+        .phase-markers { display:flex; justify-content:space-between; margin-top:10px; position:relative; }
+        .phase-marker { text-align:center; flex:1; position:relative; }
+        .phase-marker::before { content:''; position:absolute; top:-14px; left:50%; width:1px; height:8px; background:#cbd5e1; }
+        .phase-marker .phase-name { font-family:var(--font-mono); font-size:8px; font-weight:700; color:var(--at-secondary); text-transform:uppercase; }
+        .phase-marker .phase-time { font-family:var(--font-mono); font-size:8px; color:#94a3b8; }
+        .phase-marker.active .phase-name { color:#3b82f6; }
+
+        .transport-controls { display:flex; align-items:center; gap:8px; margin-top:16px; }
+        .transport-btn { display:inline-flex; align-items:center; justify-content:center; padding:8px 16px; background:var(--at-panel-white); border:1px solid var(--at-panel-border); border-radius:4px; font-family:var(--font-mono); font-size:10px; font-weight:700; cursor:pointer; transition:all 0.2s; gap:4px; }
+        .transport-btn:hover { border-color:#3b82f6; color:#3b82f6; background:rgba(59,130,246,0.04); }
+        .transport-btn.primary { background:#3b82f6; color:#fff; border-color:#3b82f6; }
+        .transport-btn.primary:hover { background:#2563eb; }
+        .transport-btn .material-symbols-outlined { font-size:16px; }
+
+        .speed-selector { display:flex; align-items:center; gap:4px; margin-left:auto; }
+        .speed-btn { padding:4px 10px; border:1px solid var(--at-panel-border); border-radius:3px; font-family:var(--font-mono); font-size:9px; font-weight:700; cursor:pointer; background:transparent; color:var(--at-secondary); transition:all 0.2s; }
+        .speed-btn.active { background:#3b82f6; color:#fff; border-color:#3b82f6; }
+
+        .replay-kpi-strip { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-top:16px; }
+        .replay-kpi { padding:10px 12px; background:var(--at-panel-white); border:1px solid var(--at-panel-border); border-radius:4px; }
+        .replay-kpi .rk-label { font-family:var(--font-mono); font-size:8px; color:var(--at-secondary); text-transform:uppercase; font-weight:600; }
+        .replay-kpi .rk-value { font-family:'Chakra Petch',sans-serif; font-size:20px; font-weight:700; color:var(--at-graphite); margin-top:2px; }
+        .replay-kpi .rk-unit { font-size:10px; color:var(--at-secondary); }
+
+        .mission-select { font-family:var(--font-mono); font-size:10px; padding:6px 10px; border:1px solid var(--at-panel-border); border-radius:4px; background:var(--at-panel-white); cursor:pointer; }
+    </style>
+</head>
+<body>
+<header id="aero-nav"></header>
+<div id="aero-connection-banner"></div>
+<section id="aero-info-bar"></section>
+
+<main class="page-main page-container">
+
+    <!-- Replay Mode Banner -->
+    <div class="replay-banner">
+        <div class="flex items-center gap-3">
+            <div class="replay-badge"><div class="pulse"></div> REPLAY MODE</div>
+            <span class="font-mono text-xs text-secondary">Historical flight data analysis — not live telemetry</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <label class="font-mono text-xxs text-secondary font-bold">MISSION PROFILE:</label>
+            <select class="mission-select" id="rp-profile">
+                <option>ISR ENDURANCE CRUISE (5,000m / 4h30m)</option>
+                <option>HIGH ALTITUDE RECON (8,000m / 3h)</option>
+                <option>HOT WEATHER OPS (45°C / 2h)</option>
+                <option>RAPID THROTTLE MANEUVER (1h30m)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Timeline Scrubber -->
+    <div class="panel">
+        <div class="panel-header">
+            <span class="panel-title">FLIGHT TIMELINE</span>
+            <span class="font-mono text-sm font-bold" style="color:#3b82f6" id="rp-time">00:00:00 / 04:30:00</span>
+        </div>
+        <div class="timeline-container">
+            <div class="scrubber-track">
+                <div class="scrubber-fill" id="rp-fill" style="width:0%"></div>
+                <div class="scrubber-thumb" id="rp-thumb" style="left:0%"></div>
+                <input type="range" class="scrubber-input" id="rp-scrubber" min="0" max="100" value="0" step="0.1">
+            </div>
+            <div class="phase-markers">
+                <div class="phase-marker active"><div class="phase-name">TAKEOFF</div><div class="phase-time">00:00</div></div>
+                <div class="phase-marker"><div class="phase-name">CLIMB</div><div class="phase-time">00:15</div></div>
+                <div class="phase-marker"><div class="phase-name">CRUISE</div><div class="phase-time">00:45</div></div>
+                <div class="phase-marker"><div class="phase-name">LOITER</div><div class="phase-time">02:30</div></div>
+                <div class="phase-marker"><div class="phase-name">DESCENT</div><div class="phase-time">03:45</div></div>
+                <div class="phase-marker"><div class="phase-name">LANDING</div><div class="phase-time">04:30</div></div>
+            </div>
+
+            <div class="transport-controls">
+                <button class="transport-btn" onclick="restartPlay()"><span class="material-symbols-outlined">skip_previous</span> RESTART</button>
+                <button class="transport-btn primary" id="rp-play-btn" onclick="togglePlay()"><span class="material-symbols-outlined">play_arrow</span> PLAY</button>
+                <button class="transport-btn" onclick="stepFwd()"><span class="material-symbols-outlined">skip_next</span> STEP</button>
+
+                <div class="speed-selector">
+                    <span class="font-mono text-xxs text-secondary font-bold">SPEED:</span>
+                    <button class="speed-btn" data-speed="0.5">0.5×</button>
+                    <button class="speed-btn active" data-speed="1">1×</button>
+                    <button class="speed-btn" data-speed="2">2×</button>
+                    <button class="speed-btn" data-speed="4">4×</button>
+                </div>
+            </div>
+
+            <!-- Replay KPIs -->
+            <div class="replay-kpi-strip" id="rp-kpis"></div>
+        </div>
+    </div>
+
+    <!-- Charts + Health -->
+    <div class="grid-row grid-12">
+        <div class="col-8 panel">
+            <div class="panel-header">
+                <span class="panel-title">REPLAY TELEMETRY</span>
+                <div class="tab-group" id="rp-tabs">
+                    <button class="tab-btn active" data-ch="rpm">RPM</button>
+                    <button class="tab-btn" data-ch="oil_pressure_bar">OIL P</button>
+                    <button class="tab-btn" data-ch="cht_1_c">CHT</button>
+                    <button class="tab-btn" data-ch="egt_1_c">EGT</button>
+                    <button class="tab-btn" data-ch="vibration_g">VIB</button>
+                    <button class="tab-btn" data-ch="fuel_flow_lph">FUEL</button>
+                </div>
+            </div>
+            <div class="panel-body-compact">
+                <div class="chart-container" style="height:240px;padding:4px"><canvas id="rp-chart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-4 panel">
+            <div class="panel-header"><span class="panel-title">HEALTH AT TIMESTAMP</span></div>
+            <div class="panel-body"><div class="health-bar-group" id="rp-health-bars"></div></div>
+        </div>
+    </div>
+</main>
+
+<footer id="aero-footer"></footer>
+
+<script src="js/utils.js"></script>
+<script src="js/engine-state.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/websocket-client.js"></script>
+<script src="js/telemetry-provider.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/mock-sim.js"></script>
+<script>
+(function(){
+    AeroNav.inject();
+    // Stop any auto-started simulation/WS — replay page manages its own frames
+    if (window.AeroMockSim) AeroMockSim.stop();
+    if (window.AeroWS) AeroWS.disconnect();
+    AeroState.setConnectionState('REPLAY');
+
+    var isPlaying = false, replayPct = 0, replayTimer = null, activeCh = 'rpm', playSpeed = 1;
+
+    document.getElementById('rp-tabs').addEventListener('click', function(e) {
+        var btn = e.target.closest('.tab-btn');
+        if (!btn) return;
+        activeCh = btn.dataset.ch;
+        document.querySelectorAll('#rp-tabs .tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+    });
+
+    // Speed buttons
+    document.querySelectorAll('.speed-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            playSpeed = parseFloat(btn.dataset.speed);
+            document.querySelectorAll('.speed-btn').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+        });
+    });
+
+    window.togglePlay = function() {
+        isPlaying = !isPlaying;
+        var btn = document.getElementById('rp-play-btn');
+        if (isPlaying) {
+            if (btn) btn.innerHTML = '<span class="material-symbols-outlined">pause</span> PAUSE';
+            btn.classList.add('primary');
+            replayTimer = setInterval(function() {
+                replayPct = Math.min(100, replayPct + 0.5 * playSpeed);
+                if (replayPct >= 100) { isPlaying = false; clearInterval(replayTimer); btn.innerHTML = '<span class="material-symbols-outlined">play_arrow</span> PLAY'; }
+                updateScrub(); genFrame();
+            }, 500);
+        } else {
+            if (btn) btn.innerHTML = '<span class="material-symbols-outlined">play_arrow</span> PLAY';
+            if (replayTimer) clearInterval(replayTimer);
+        }
+    };
+    window.restartPlay = function() { if (replayTimer) clearInterval(replayTimer); isPlaying = false; replayPct = 0; updateScrub(); var b = document.getElementById('rp-play-btn'); if(b) b.innerHTML = '<span class="material-symbols-outlined">play_arrow</span> PLAY'; };
+    window.stepFwd = function() { replayPct = Math.min(100, replayPct + 1); updateScrub(); genFrame(); };
+
+    document.getElementById('rp-scrubber').addEventListener('input', function(e) { replayPct = parseFloat(e.target.value); updateScrub(); genFrame(); });
+
+    function updateScrub() {
+        var s = document.getElementById('rp-scrubber'); if (s) s.value = replayPct;
+        var fill = document.getElementById('rp-fill'); if (fill) fill.style.width = replayPct + '%';
+        var thumb = document.getElementById('rp-thumb'); if (thumb) thumb.style.left = 'calc(' + replayPct + '% - 10px)';
+        var m = Math.round((replayPct/100)*270), h = Math.floor(m/60), mm = m%60, ss = Math.floor((replayPct*3)%60);
+        var te = document.getElementById('rp-time'); if (te) te.innerText = String(h).padStart(2,'0') + ':' + String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0') + ' / 04:30:00';
+
+        // Phase markers
+        document.querySelectorAll('.phase-marker').forEach(function(el, idx) {
+            var thresholds = [0, 5.5, 16.7, 55.6, 83.3, 100];
+            el.classList.toggle('active', replayPct >= thresholds[idx] && (idx === 5 || replayPct < thresholds[idx+1]));
+        });
+    }
+
+    function genFrame() {
+        var t = replayPct / 100, n = function(s) { return (Math.random()-0.5) * (s||1); };
+        var measured = {
+            rpm: Math.round(4820 + Math.sin(t*20)*50 + n(10)),
+            cht_1_c: +(158+Math.sin(t*8)*3+n(1)).toFixed(1), cht_2_c: +(156+Math.sin(t*8)*2.5+n(1)).toFixed(1),
+            cht_3_c: +(160+Math.sin(t*8)*3.5+n(1)).toFixed(1), cht_4_c: +(157+Math.sin(t*8)*2+n(1)).toFixed(1),
+            egt_1_c: +(704+Math.sin(t*6)*8+n(2)).toFixed(1), egt_2_c: +(700+Math.sin(t*6)*6+n(2)).toFixed(1),
+            egt_3_c: +(708+Math.sin(t*6)*10+n(2)).toFixed(1), egt_4_c: +(702+Math.sin(t*6)*5+n(2)).toFixed(1),
+            oil_pressure_bar: +(4.2+Math.sin(t*12)*0.1+n(0.02)).toFixed(2), oil_temp_c: +(96+Math.sin(t*4)*2+n(0.3)).toFixed(1),
+            fuel_flow_lph: +(18.4+Math.sin(t*10)*0.5+n(0.1)).toFixed(1), vibration_g: +(0.13+n(0.008)).toFixed(3)
+        };
+        AeroState.processTick({
+            meta: { ts: new Date().toISOString(), seq: Math.round(replayPct*10) },
+            measured: measured,
+            health: { overall_index: +(94-t*8+n(0.5)).toFixed(1), thermal: +(91-t*5+n(0.3)).toFixed(1), mechanical: +(96-t*3+n(0.2)).toFixed(1), lubrication: +(94-t*4+n(0.3)).toFixed(1), combustion: +(92-t*6+n(0.4)).toFixed(1), electrical: +(97-t*2+n(0.1)).toFixed(1) },
+            anomaly: { detected: false, score: +(0.53+t*0.3+n(0.03)).toFixed(3), threshold: 2.219, confirmed_for_s: 0 },
+            fault: null, rul: null,
+            advisory: { severity: 'NORMAL', message: 'Replay data', action_by_min: null },
+            sensor_health: { all_valid: true, suspect_channels: [] }
+        });
+
+        // Update KPIs
+        var kpiEl = document.getElementById('rp-kpis');
+        if (kpiEl) {
+            var kpis = [
+                {l:'RPM', v:measured.rpm, u:''},
+                {l:'OIL PRES', v:measured.oil_pressure_bar, u:'bar'},
+                {l:'CHT (CYL1)', v:measured.cht_1_c, u:'°C'},
+                {l:'EGT (CYL1)', v:measured.egt_1_c, u:'°C'},
+                {l:'FUEL FLOW', v:measured.fuel_flow_lph, u:'L/h'},
+                {l:'VIBRATION', v:measured.vibration_g, u:'g'}
+            ];
+            kpiEl.innerHTML = kpis.map(function(k) {
+                return '<div class="replay-kpi"><div class="rk-label">'+k.l+'</div><div class="rk-value">'+k.v+'<span class="rk-unit"> '+k.u+'</span></div></div>';
+            }).join('');
+        }
+    }
+
+    AeroState.subscribe(function(state) {
+        AeroCharts.drawTimeSeries(document.getElementById('rp-chart'), AeroState.getHistory(), activeCh, { title: activeCh.toUpperCase().replace(/_/g,' ') + ' — REPLAY' });
+        AeroCharts.drawHealthBars(document.getElementById('rp-health-bars'), state.health);
+    });
+    window.addEventListener('resize', function() { AeroCharts.drawTimeSeries(document.getElementById('rp-chart'), AeroState.getHistory(), activeCh); });
+})();
+</script>
+</body>
+</html>

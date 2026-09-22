@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AERO-TWIN — Maintenance Intelligence | Predictive Analytics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Geist:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/aero-twin.css">
+    <style>
+        .maint-hero { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px; }
+        .status-card { background:var(--at-panel-white); border:1px solid var(--at-panel-border); border-radius:6px; padding:20px; position:relative; overflow:hidden; }
+        .status-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; }
+        .status-card.card-ok::before { background:linear-gradient(90deg, #10b981, #34d399); }
+        .status-card.card-warn::before { background:linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .status-card.card-crit::before { background:linear-gradient(90deg, #ef4444, #f87171); }
+        .status-icon-circle { width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:12px; }
+        .status-icon-circle.ok { background:rgba(16,185,129,0.1); color:#10b981; }
+        .status-icon-circle.warn { background:rgba(245,158,11,0.1); color:#f59e0b; }
+        .status-icon-circle.crit { background:rgba(239,68,68,0.1); color:#ef4444; }
+        .status-card .card-title { font-family:var(--font-mono); font-size:9px; color:var(--at-secondary); text-transform:uppercase; font-weight:600; letter-spacing:0.06em; margin-bottom:4px; }
+        .status-card .card-value { font-family:'Chakra Petch',sans-serif; font-size:22px; font-weight:700; color:var(--at-graphite); }
+
+        .rul-gauge { position:relative; text-align:center; }
+        .rul-gauge .rul-main-val { font-family:'Chakra Petch',sans-serif; font-size:36px; font-weight:700; color:var(--at-graphite); }
+        .rul-gauge .rul-unit-text { font-size:14px; color:var(--at-secondary); font-weight:500; }
+        .rul-bar { height:8px; background:#e8ecef; border-radius:4px; margin-top:12px; overflow:hidden; }
+        .rul-bar-fill { height:100%; border-radius:4px; transition:width 0.5s ease; }
+        .rul-bar-labels { display:flex; justify-content:space-between; margin-top:4px; font-family:var(--font-mono); font-size:8px; color:var(--at-secondary); }
+
+        .event-table { width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:10px; }
+        .event-table th { text-align:left; padding:8px 12px; background:var(--at-cool-gray); font-size:9px; color:var(--at-secondary); text-transform:uppercase; font-weight:700; letter-spacing:0.04em; border-bottom:2px solid var(--at-panel-border); }
+        .event-table td { padding:8px 12px; border-bottom:1px solid var(--at-panel-border); vertical-align:middle; }
+        .event-table tr:hover { background:rgba(0,127,134,0.02); }
+        .sev-badge { display:inline-block; padding:2px 8px; border-radius:3px; font-size:8px; font-weight:700; text-transform:uppercase; }
+        .sev-badge.sev-info { background:rgba(59,130,246,0.1); color:#3b82f6; }
+        .sev-badge.sev-caution { background:rgba(245,158,11,0.1); color:#f59e0b; }
+        .sev-badge.sev-warning { background:rgba(249,115,22,0.1); color:#f97316; }
+        .sev-badge.sev-critical { background:rgba(239,68,68,0.1); color:#ef4444; }
+    </style>
+</head>
+<body>
+<header id="aero-nav"></header>
+<div id="aero-connection-banner"></div>
+<section id="aero-info-bar"></section>
+
+<main class="page-main page-container">
+
+    <!-- Hero: Fault + RUL + Advisory -->
+    <div class="maint-hero">
+        <!-- Fault Status -->
+        <div class="status-card card-ok" id="mt-fault-card">
+            <div class="status-icon-circle ok" id="mt-fault-icon"><span class="material-symbols-outlined" style="font-size:24px">verified</span></div>
+            <div class="card-title">ACTIVE FAULT STATUS</div>
+            <div class="card-value" id="mt-fault-class" style="color:#10b981">NO ACTIVE FAULT</div>
+            <div class="font-mono text-xxs text-secondary" style="margin-top:8px" id="mt-fault-detail">Engine parameters within normal operating bounds</div>
+            <div id="mt-fault-metrics" style="margin-top:12px"></div>
+        </div>
+
+        <!-- RUL -->
+        <div class="status-card card-ok" id="mt-rul-card">
+            <div class="status-icon-circle ok" id="mt-rul-icon"><span class="material-symbols-outlined" style="font-size:24px">schedule</span></div>
+            <div class="card-title">REMAINING USEFUL LIFE (RUL)</div>
+            <div id="mt-rul-display" class="rul-gauge">
+                <div class="font-mono text-xs text-secondary" style="margin-top:8px">NOT CALCULABLE</div>
+                <div class="font-mono text-xxs text-secondary" style="margin-top:2px">(No active fault — RUL computed only when degradation detected)</div>
+            </div>
+        </div>
+
+        <!-- Advisory -->
+        <div class="status-card card-ok" id="mt-advisory-card">
+            <div class="status-icon-circle ok" id="mt-advisory-icon"><span class="material-symbols-outlined" style="font-size:24px">task_alt</span></div>
+            <div class="card-title">MAINTENANCE ADVISORY</div>
+            <div class="card-value" id="mt-advisory-sev" style="color:#10b981;font-size:16px">NORMAL</div>
+            <div class="font-mono text-xs text-secondary" style="margin-top:6px;line-height:1.5" id="mt-advisory-msg">All systems nominal. Continue mission as planned.</div>
+            <div class="font-mono text-xxs font-bold" style="margin-top:8px" id="mt-advisory-action"></div>
+        </div>
+    </div>
+
+    <!-- ROW 2: Health + Contributors -->
+    <div class="grid-row grid-12">
+        <div class="col-6 panel">
+            <div class="panel-header"><span class="panel-title">SUBSYSTEM HEALTH STATUS</span><span class="font-mono text-xxs text-secondary">REAL-TIME INDEX</span></div>
+            <div class="panel-body"><div class="health-bar-group" id="mt-health-bars"></div></div>
+        </div>
+        <div class="col-6 panel">
+            <div class="panel-header"><span class="panel-title">FAULT EVIDENCE — TOP CONTRIBUTORS</span></div>
+            <div class="panel-body"><div class="contributor-bar-group" id="mt-contributors"><div class="font-mono text-xs text-secondary">No fault active — contributor analysis requires active fault classification</div></div></div>
+        </div>
+    </div>
+
+    <!-- ROW 3: Event Log -->
+    <div class="grid-row grid-12">
+        <div class="col-12 panel">
+            <div class="panel-header">
+                <span class="panel-title">DIAGNOSTIC EVENT LOG</span>
+                <span class="font-mono text-xxs text-secondary" id="mt-event-count">0 events</span>
+            </div>
+            <div class="panel-body-compact" style="max-height:350px;overflow-y:auto">
+                <table class="event-table" id="mt-event-table">
+                    <thead><tr><th style="width:100px">TIME</th><th style="width:120px">TYPE</th><th style="width:80px">SEVERITY</th><th>MESSAGE</th><th style="width:80px">LEAD TIME</th></tr></thead>
+                    <tbody id="mt-event-body">
+                        <tr><td colspan="5" class="text-secondary" style="text-align:center;padding:24px">Awaiting diagnostic events...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer id="aero-footer"></footer>
+
+<script src="js/utils.js"></script>
+<script src="js/engine-state.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/websocket-client.js"></script>
+<script src="js/telemetry-provider.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/mock-sim.js"></script>
+<script>
+(function(){
+    AeroNav.inject();
+    AeroWS.connect();
+
+    AeroState.subscribe(function(state) {
+        // Fault card
+        var faultCard = document.getElementById('mt-fault-card');
+        var faultIcon = document.getElementById('mt-fault-icon');
+        var faultClass = document.getElementById('mt-fault-class');
+        var faultDetail = document.getElementById('mt-fault-detail');
+        var faultMetrics = document.getElementById('mt-fault-metrics');
+        if (faultCard) {
+            if (!state.fault) {
+                faultCard.className = 'status-card card-ok';
+                faultIcon.className = 'status-icon-circle ok';
+                faultIcon.innerHTML = '<span class="material-symbols-outlined" style="font-size:24px">verified</span>';
+                faultClass.textContent = 'NO ACTIVE FAULT';
+                faultClass.style.color = '#10b981';
+                faultDetail.textContent = 'Engine parameters within normal operating bounds';
+                faultMetrics.innerHTML = '';
+            } else {
+                var isCrit = state.fault.severity === 'CRITICAL';
+                faultCard.className = 'status-card ' + (isCrit ? 'card-crit' : 'card-warn');
+                faultIcon.className = 'status-icon-circle ' + (isCrit ? 'crit' : 'warn');
+                faultIcon.innerHTML = '<span class="material-symbols-outlined" style="font-size:24px">error</span>';
+                faultClass.textContent = state.fault.class || 'UNKNOWN FAULT';
+                faultClass.style.color = isCrit ? '#ef4444' : '#f59e0b';
+                faultDetail.textContent = 'Fault classified by ML model';
+                faultMetrics.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">' +
+                    '<div style="padding:8px;background:var(--at-cool-gray);border-radius:4px"><div class="font-mono text-xxs text-secondary">CONFIDENCE</div><div class="font-mono text-sm font-bold">' + Math.round((state.fault.confidence||0)*100) + '%</div></div>' +
+                    '<div style="padding:8px;background:var(--at-cool-gray);border-radius:4px"><div class="font-mono text-xxs text-secondary">SEVERITY</div><div class="font-mono text-sm font-bold" style="color:' + (isCrit?'#ef4444':'#f59e0b') + '">' + state.fault.severity + '</div></div></div>';
+            }
+        }
+
+        // RUL
+        var rulCard = document.getElementById('mt-rul-card');
+        var rulDisplay = document.getElementById('mt-rul-display');
+        var rulIcon = document.getElementById('mt-rul-icon');
+        if (rulDisplay) {
+            if (!state.rul || state.rul.minutes == null) {
+                if (rulCard) rulCard.className = 'status-card card-ok';
+                if (rulIcon) { rulIcon.className = 'status-icon-circle ok'; }
+                rulDisplay.innerHTML = '<div class="font-mono text-xs text-secondary" style="margin-top:8px">NOT CALCULABLE</div><div class="font-mono text-xxs text-secondary" style="margin-top:2px">(No active fault — RUL computed only when degradation detected)</div>';
+            } else {
+                var mins = state.rul.minutes;
+                var isLow = mins < 60;
+                if (rulCard) rulCard.className = 'status-card ' + (isLow ? 'card-crit' : 'card-warn');
+                if (rulIcon) { rulIcon.className = 'status-icon-circle ' + (isLow ? 'crit' : 'warn'); }
+                rulDisplay.innerHTML = '<div class="rul-main-val">' + Math.round(mins) + '<span class="rul-unit-text"> min</span></div>' +
+                    '<div class="rul-bar"><div class="rul-bar-fill" style="width:' + Math.min(100,mins/3) + '%;background:' + (isLow?'#ef4444':'#f59e0b') + '"></div></div>' +
+                    '<div class="rul-bar-labels"><span>P10: ' + Math.round(state.rul.p10) + ' min</span><span>MEDIAN: ' + Math.round(mins) + ' min</span><span>P90: ' + Math.round(state.rul.p90) + ' min</span></div>';
+            }
+        }
+
+        // Advisory
+        var advCard = document.getElementById('mt-advisory-card');
+        var advIcon = document.getElementById('mt-advisory-icon');
+        var advSev = document.getElementById('mt-advisory-sev');
+        var advMsg = document.getElementById('mt-advisory-msg');
+        var advAction = document.getElementById('mt-advisory-action');
+        var adv = state.advisory;
+        if (advCard) {
+            if (!adv || adv.severity === 'NORMAL') {
+                advCard.className = 'status-card card-ok';
+                if (advIcon) advIcon.className = 'status-icon-circle ok';
+                if (advSev) { advSev.textContent = 'NORMAL'; advSev.style.color = '#10b981'; }
+                if (advMsg) advMsg.textContent = adv ? adv.message : 'All systems nominal.';
+                if (advAction) advAction.textContent = '';
+            } else {
+                var isCrit = adv.severity === 'CRITICAL' || adv.severity === 'WARNING';
+                advCard.className = 'status-card ' + (isCrit ? 'card-crit' : 'card-warn');
+                if (advIcon) { advIcon.className = 'status-icon-circle ' + (isCrit ? 'crit' : 'warn'); advIcon.querySelector('span').textContent = 'warning'; }
+                var advColor = adv.severity === 'CRITICAL' ? '#ef4444' : adv.severity === 'WARNING' ? '#f97316' : '#f59e0b';
+                if (advSev) { advSev.textContent = adv.severity; advSev.style.color = advColor; }
+                if (advMsg) advMsg.textContent = adv.message || '';
+                if (advAction) { advAction.textContent = adv.action_by_min ? '⏱ ACTION REQUIRED WITHIN ' + adv.action_by_min + ' MIN' : ''; advAction.style.color = advColor; }
+            }
+        }
+
+        AeroCharts.drawHealthBars(document.getElementById('mt-health-bars'), state.health);
+
+        if (state.fault && state.fault.top_contributors) {
+            AeroCharts.drawContributors(document.getElementById('mt-contributors'), state.fault.top_contributors);
+        } else {
+            var ce = document.getElementById('mt-contributors');
+            if (ce) ce.innerHTML = '<div class="font-mono text-xs text-secondary">No fault active — contributor analysis requires active fault classification</div>';
+        }
+
+        // Event table
+        var tbody = document.getElementById('mt-event-body');
+        var cnt = document.getElementById('mt-event-count');
+        if (cnt) cnt.innerText = state.events.length + ' events';
+        if (tbody && state.events.length > 0) {
+            tbody.innerHTML = state.events.map(function(ev) {
+                var sevClass = ev.severity === 'CRITICAL' ? 'sev-critical' : ev.severity === 'WARNING' ? 'sev-warning' : ev.severity === 'CAUTION' ? 'sev-caution' : 'sev-info';
+                return '<tr><td>' + AeroUtils.fmtTime(ev.timestamp) + '</td><td class="font-bold">' + (ev.type || '--') + '</td><td><span class="sev-badge ' + sevClass + '">' + ev.severity + '</span></td><td>' + ev.message + '</td><td>' + (ev.lead_time_s ? ev.lead_time_s + 's' : '--') + '</td></tr>';
+            }).join('');
+        }
+    });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AERO-TWIN: Dedicated Real-time 3D Digital Twin Viewport & Diagnostics Interface." />
+  <title>AERO-TWIN | Dedicated Digital Twin Interface</title>
+  
+  <!-- Technical Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="/assets/digitalTwin-CUiQyfvR.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/UAVAttitudeController-DByGkPkU.js">
+  <link rel="stylesheet" crossorigin href="/assets/UAVAttitudeController-BGHj9HQ6.css">
+</head>
+<body>
+  <!-- Fullscreen WebGL Canvas Container -->
+  <div id="canvas-container">
+    <canvas id="webgl-canvas"></canvas>
+  </div>
+
+  <!-- SVG Overlay for Dynamic Telemetry Connector Lines -->
+  <svg id="telemetry-svg-overlay"></svg>
+
+  <!-- Top Left LIVE DIGITAL TWIN Brand Title -->
+  <header class="top-nav-bar dt-nav-bar">
+    <div class="brand-title-box">
+      <h1 style="letter-spacing: 0.08em; font-size: 1.25rem;">LIVE DIGITAL TWIN</h1>
+      <span class="sub-tag" style="color: #38bdf8; font-weight: 700;">AERO-PISTON ENGINE | SIH 26054</span>
+    </div>
+
+    <div class="mode-controls-group">
+      <button id="btn-mode-standard" class="btn-segment active">STANDARD TWIN</button>
+      <button id="btn-mode-xray" class="btn-segment">X-RAY & SENSORS</button>
+      <button id="btn-exploded-view" class="btn-action">EXPLODED VIEW</button>
+      <button id="btn-reset-view" class="btn-action">RESET VIEW</button>
+    </div>
+  </header>
+
+  <!-- Top Right Live Circular RPM Gauge -->
+  <div class="dt-gauge-widget" id="dt-gauge-widget">
+    <svg viewBox="0 0 100 100" class="dt-gauge-svg">
+      <circle cx="50" cy="50" r="40" class="dt-gauge-bg-circle"></circle>
+      <circle cx="50" cy="50" r="40" class="dt-gauge-prog-circle" id="dt-gauge-arc"></circle>
+    </svg>
+    <div class="dt-gauge-center">
+      <div class="dt-gauge-rpm-val" id="dt-gauge-rpm">4,820</div>
+      <div class="dt-gauge-unit">RPM</div>
+    </div>
+  </div>
+
+
+  <!-- Digital Twin Mode Banner Badge -->
+  <div id="digital-twin-mode-badge" class="xray-mode-badge active" style="background: rgba(2, 132, 199, 0.25); border-color: #0284c7; color: #38bdf8; display: none;">
+    DIGITAL TWIN STATE ACTIVE (SINGLE SOURCE OF TRUTH)
+  </div>
+
+  <div id="xray-mode-badge" class="xray-mode-badge">
+    X-RAY INSPECTION MODE
+  </div>
+
+  <!-- Floating Telemetry Labels Container -->
+  <div id="telemetry-labels-container" class="telemetry-label-container"></div>
+
+  <!-- Sensor Details Popup Dialog -->
+  <div id="sensor-dialog" class="sensor-dialog">
+    <div class="dialog-title" id="sensor-dialog-name">Sensor Name</div>
+    <div class="dialog-val" id="sensor-dialog-value">--</div>
+    <div style="font-size: 0.68rem; color: #16a34a; font-weight: 700; margin-top: 4px;">STATUS: NORMAL</div>
+  </div>
+
+  <!-- Component Inspection Panel (Right Side) -->
+  <aside id="inspection-panel" class="inspection-panel">
+    <div class="panel-header">
+      <div>
+        <div id="panel-component-name" class="title">CYLINDER RIGHT 1</div>
+        <div id="panel-component-category" class="category">Combustion / Cylinder Group</div>
+      </div>
+      <button id="btn-close-panel" class="panel-close-btn">&times;</button>
+    </div>
+
+    <!-- Embedded SECOND Three.js 3D Viewport for Cloned Component Inspection -->
+    <div class="inspection-viewport-box">
+      <div class="viewport-badge">ISOLATED 3D TWIN COMPONENT</div>
+      <canvas id="inspection-canvas"></canvas>
+    </div>
+
+    <div class="health-badge-row">
+      <div class="status-tag">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #16a34a; display: inline-block;"></span>
+        <span id="panel-health-status">HEALTHY</span>
+      </div>
+      <div class="health-value"><span id="panel-health-index">94</span>%</div>
+    </div>
+
+    <div class="telemetry-grid">
+      <div class="telemetry-tile">
+        <div class="tile-label">CHT</div>
+        <div id="panel-cht-val" class="tile-val">158 °C</div>
+      </div>
+      <div class="telemetry-tile">
+        <div class="tile-label">EGT</div>
+        <div id="panel-egt-val" class="tile-val">704 °C</div>
+      </div>
+      <div class="telemetry-tile">
+        <div class="tile-label">VIBRATION</div>
+        <div id="panel-vib-val" class="tile-val">0.13 g</div>
+      </div>
+      <div class="telemetry-tile">
+        <div class="tile-label">RPM</div>
+        <div id="panel-rpm-val" class="tile-val">4,820</div>
+      </div>
+    </div>
+
+    <div class="panel-action-buttons">
+      <button id="btn-isolate-component" class="btn-primary">ISOLATE COMPONENT</button>
+      <button id="btn-reset-inspection" class="btn-secondary">RESET VIEW</button>
+    </div>
+
+    <div class="sim-tag-footer">DIGITAL TWIN STATE SYNCHRONIZED</div>
+  </aside>
+
+</body>
+</html>

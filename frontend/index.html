@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>AERO-TWIN — Aerospace Engine Intelligence</title>
+
+    <!-- Tailwind CSS with plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <!-- Google Fonts: Geist, IBM Plex Mono, Hindi (Devanagari), Tamil, Telugu -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@700;800&family=Noto+Sans+Tamil:wght@700;800&family=Noto+Sans+Telugu:wght@700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/aero-twin.css">
+    <script src="js/utils.js"></script>
+    <script src="js/nav.js"></script>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00646a",
+                        "primary-container": "#007f86",
+                        "on-primary": "#ffffff",
+                        "outline": "#6e797a",
+                        "outline-variant": "#bdc9c9",
+                        "surface": "#f1fbfd",
+                        "on-surface": "#141d1f",
+                        "on-surface-variant": "#3e494a",
+                        "error": "#ba1a1a",
+                        "secondary": "#835500",
+                        "nominal-glow": "#a4f3ca"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Geist", "sans-serif"],
+                        "headline-md": ["Geist", "sans-serif"],
+                        "body-lg": ["Geist", "sans-serif"],
+                        "body-md": ["Geist", "sans-serif"],
+                        "label-mono": ["'IBM Plex Mono'", "monospace"],
+                        "telemetry-data": ["'IBM Plex Mono'", "monospace"]
+                    },
+                    animation: {
+                        'radar-pulse': 'radarPulse 6s ease-out infinite',
+                    },
+                    keyframes: {
+                        radarPulse: {
+                            '0%': { transform: 'scale(0.85)', opacity: '0.6' },
+                            '50%': { opacity: '0.2' },
+                            '100%': { transform: 'scale(1.4)', opacity: '0' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0b1215;
+            color: #ffffff;
+            font-family: 'Geist', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            justify-content: space-between;
+        }
+
+        /* High-Altitude Drone Flight Trials Photo (100% Clear & Sharp) */
+        .aerospace-bg {
+            position: relative;
+            background: url('drone_bg.jpg') center center / cover no-repeat;
+        }
+
+        /* Subtle Technical Accents */
+        .aerospace-grid {
+            display: none;
+        }
+
+        .atmospheric-isobars {
+            display: none;
+        }
+
+        /* Multilingual Predict Cycler (English, Tamil, Telugu, Hindi) */
+        .predict-container {
+            display: inline-flex;
+            align-items: baseline;
+            position: relative;
+            color: #38d9e6;
+            height: 1.18em;
+            vertical-align: -0.15em;
+            overflow: hidden;
+            min-width: 290px;
+        }
+
+        .predict-word {
+            position: absolute;
+            bottom: 0.08em;
+            left: 0;
+            opacity: 0;
+            transform: translateY(110%);
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            white-space: nowrap;
+            display: inline-block;
+            font-weight: 800;
+            line-height: 1;
+            text-shadow: 0 0 16px rgba(56, 217, 230, 0.7);
+        }
+
+        .predict-word.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .predict-word.exit {
+            opacity: 0;
+            transform: translateY(-110%);
+        }
+
+        /* Transparent Engine Visual */
+        .engine-transparent {
+            user-select: none;
+            pointer-events: none;
+            filter: drop-shadow(0 20px 35px rgba(0, 100, 106, 0.25));
+            transition: opacity 0.5s ease;
+        }
+
+        /* Precision Anchored Pins */
+        .telemetry-callout {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 25;
+            transition: transform 0.2s ease;
+        }
+
+        .telemetry-badge {
+            background: rgba(11, 20, 24, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 4px 9px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: #ffffff;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+            border-radius: 2px;
+            white-space: nowrap;
+            user-select: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .telemetry-callout:hover .telemetry-badge {
+            transform: scale(1.06);
+            border-color: #38d9e6;
+            box-shadow: 0 6px 20px rgba(56, 217, 230, 0.4);
+        }
+
+        .line-down {
+            width: 1px;
+            height: 24px;
+            background-color: #38d9e6;
+            opacity: 0.9;
+        }
+
+        .line-up {
+            width: 1px;
+            height: 24px;
+            background-color: #38d9e6;
+            opacity: 0.9;
+        }
+
+        .target-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: #38d9e6;
+            border: 1.5px solid #ffffff;
+            box-shadow: 0 0 10px rgba(56, 217, 230, 1);
+        }
+
+        .target-dot.secondary {
+            background-color: #f59e0b;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 1);
+        }
+
+        .target-dot.error {
+            background-color: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 1);
+        }
+
+        /* Glassmorphism Dark HUD Card (Centered) */
+        .glass-dark-center {
+            background: rgba(11, 18, 21, 0.94);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* View Mode Switcher Tabs */
+        .view-tab {
+            padding: 5px 12px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-radius: 2px;
+            transition: all 0.25s ease;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .view-tab.active {
+            background: #007f86;
+            color: #ffffff;
+            border: 1px solid #38d9e6;
+            box-shadow: 0 0 12px rgba(56, 217, 230, 0.4);
+        }
+
+        .view-tab:not(.active) {
+            background: rgba(255, 255, 255, 0.12);
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .view-tab:not(.active):hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            border-color: #38d9e6;
+        }
+
+        .nav-link {
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: #38d9e6;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Datum Crosshair Accents */
+        .datum-cross {
+            position: absolute;
+            width: 9px;
+            height: 9px;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .datum-cross::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 0;
+            width: 9px;
+            height: 1px;
+            background: #38d9e6;
+        }
+
+        .datum-cross::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 4px;
+            width: 1px;
+            height: 9px;
+            background: #38d9e6;
+        }
+    </style>
+</head>
+
+<body class="font-body-md min-h-screen flex flex-col relative selection:bg-primary-container selection:text-on-primary">
+
+    <!-- Clean Top Navigation Bar -->
+    <nav class="bg-black/60 backdrop-blur-md fixed w-full top-0 border-b border-white/15 z-50">
+        <div class="flex justify-between items-center w-full px-8 py-4 max-w-[1440px] mx-auto">
+
+            <!-- Logo with Custom Aerospace Delta-Propulsion Emblem Symbol -->
+            <a class="flex items-center gap-3 text-headline-md font-bold tracking-tight text-white uppercase group"
+                href="#">
+                <div
+                    class="w-8 h-8 rounded-xs bg-primary text-white flex items-center justify-center shadow-sm group-hover:bg-primary-container transition-colors">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2.5L3.5 19.5L12 15L20.5 19.5L12 2.5Z" stroke="#ffffff" stroke-width="1.8"
+                            stroke-linejoin="round" fill="rgba(255,255,255,0.15)" />
+                        <circle cx="12" cy="11.5" r="2.2" fill="#a4f3ca" stroke="#00646a" stroke-width="0.8" />
+                        <line x1="12" y1="15" x2="12" y2="21.5" stroke="#a4f3ca" stroke-width="1.5"
+                            stroke-linecap="round" />
+                    </svg>
+                </div>
+                <span class="text-[17px] tracking-tight font-extrabold text-white drop-shadow">AERO-TWIN</span>
+            </a>
+
+            <!-- Main Navigation Links -->
+            <div
+                class="hidden md:flex items-center gap-7 text-[11px] font-label-mono uppercase tracking-widest text-white/80 font-medium">
+                <a class="text-white border-b-2 border-[#38d9e6] pb-1 font-bold" href="#">Home</a>
+                <a class="nav-link hover:text-white transition-colors" href="overview.html">Overview</a>
+                <a class="nav-link hover:text-white transition-colors" href="digital-twin.html">Digital Twin</a>
+                <a class="nav-link hover:text-white transition-colors" href="engineer.html">Engineer</a>
+                <a class="nav-link hover:text-white transition-colors" href="maintenance.html">Maintenance</a>
+                <a class="nav-link hover:text-white transition-colors" href="replay.html">Mission Replay</a>
+            </div>
+
+            <!-- System Online & Enter Platform Button & Theme Switcher -->
+            <div class="hidden md:flex items-center gap-5">
+                <div
+                    class="flex items-center gap-2 text-[11px] font-label-mono text-emerald-400 tracking-wider uppercase font-semibold">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></span>
+                    System Online
+                </div>
+                <a href="overview.html"
+                    class="px-6 py-2 border border-white/40 text-white font-label-mono text-[11px] uppercase font-bold hover:bg-white hover:text-black transition-colors duration-300 shadow-sm inline-block backdrop-blur-sm">
+                    ENTER PLATFORM
+                </a>
+            </div>
+
+            <!-- Mobile Menu Hamburger -->
+            <button class="md:hidden text-white">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Hero Section (Single Screen Fitted) -->
+    <main class="flex-grow flex items-center relative pt-16">
+        <section
+            class="aerospace-bg relative w-full h-[calc(100vh-68px)] min-h-[740px] flex items-center overflow-hidden">
+
+            <!-- Aerospace Engineering Grid & Atmospheric Isobar Curves -->
+            <div class="aerospace-grid"></div>
+            <div class="atmospheric-isobars"></div>
+
+            <!-- Technical Corner Datum Crosshairs -->
+            <div class="datum-cross" style="top: 25px; left: 25px;"></div>
+            <div class="datum-cross" style="top: 25px; right: 25px;"></div>
+            <div class="datum-cross" style="bottom: 25px; left: 25px;"></div>
+            <div class="datum-cross" style="bottom: 25px; right: 25px;"></div>
+
+            <div
+                class="max-w-[1440px] mx-auto px-8 lg:px-12 w-full flex flex-col lg:flex-row items-center justify-between relative z-20 h-full pb-24 pt-4">
+
+                <!-- Left Headline & CTA (Clean & Direct) -->
+                <div class="w-full lg:w-1/2 flex flex-col justify-center space-y-8 pr-6 mt-4 lg:mt-0 z-20">
+
+                    <!-- Headline with Indian Languages Cycler (English, Tamil, Telugu, Hindi) -->
+                    <h1
+                        class="text-[42px] sm:text-[50px] lg:text-[54px] font-headline-lg font-bold text-white leading-[1.12] tracking-tight drop-shadow-[0_4px_20px_rgba(0,0,0,0.85)]">
+                        SEE THE ENGINE.<br>
+                        UNDERSTAND THE ENGINE.<br>
+                        <span class="predict-container" id="predict-container">
+                            <span class="predict-word active text-[#38d9e6] tracking-tight"
+                                data-lang="EN">PREDICT</span>
+                            <span class="predict-word text-[#38d9e6] tracking-normal text-[0.94em]"
+                                data-lang="TA">கணிக்க</span>
+                            <span class="predict-word text-[#38d9e6] tracking-normal text-[0.96em]"
+                                data-lang="TE">అంచనా</span>
+                            <span class="predict-word text-[#38d9e6] tracking-normal text-[0.88em]"
+                                data-lang="HI">पूर्वानुमान</span>
+                        </span><br>
+                        THE ENGINE.
+                    </h1>
+
+                    <!-- Single Clean CTA Button -->
+                    <div class="pt-2">
+                        <a href="digital-twin.html"
+                            class="bg-primary text-white px-8 py-4 font-label-mono text-[12px] uppercase font-bold tracking-wider hover:bg-primary-container transition-colors duration-300 flex items-center justify-center gap-2.5 shadow-lg border border-white/20 inline-flex backdrop-blur-sm">
+                            EXPLORE THE DIGITAL TWIN
+                            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Visual: 100% Transparent Engine (Standard & Holographic X-Ray) -->
+                <div class="w-full lg:w-1/2 relative h-full flex items-center justify-center">
+
+                    <!-- Engineering Concentric Telemetry Range Rings -->
+                    <div
+                        class="absolute w-[440px] h-[440px] border border-[#38d9e6]/30 rounded-full animate-radar-pulse z-0 pointer-events-none">
+                    </div>
+                    <div class="absolute w-[440px] h-[440px] border border-[#38d9e6]/20 rounded-full animate-radar-pulse z-0 pointer-events-none"
+                        style="animation-delay: 3s;"></div>
+
+                    <!-- Engine View Mode Switcher -->
+                    <div
+                        class="absolute top-8 right-0 z-40 flex items-center gap-2 bg-black/60 p-1 rounded-xs border border-white/20 backdrop-blur-md shadow-lg">
+                        <button onclick="switchEngineView('standard')" id="btn-standard" class="view-tab active">
+                            Standard Twin
+                        </button>
+                        <button onclick="switchEngineView('xray')" id="btn-xray" class="view-tab">
+                            X-Ray & Sensors
+                        </button>
+                    </div>
+
+                    <!-- Engine Container (100% Transparent PNG, No White Box) -->
+                    <div class="relative z-10 w-[580px] h-[440px] max-w-full flex items-center justify-center">
+
+                        <!-- 1. Photorealistic Boxer Aero-Engine (100% Transparent PNG) -->
+                        <img id="view-standard-img" src="aero_engine.png" alt="Aero-Piston Engine Digital Twin"
+                            class="engine-transparent absolute inset-0 w-full h-full object-contain opacity-100">
+
+                        <!-- 2. Clean Holographic X-Ray Engine (100% Transparent PNG, No Text) -->
+                        <img id="view-xray-img" src="aero_engine_xray.png" alt="Holographic X-Ray Aero-Piston Engine"
+                            class="engine-transparent absolute inset-0 w-full h-full object-contain opacity-0">
+
+                        <!-- ========================================================================= -->
+                        <!-- PRECISION ANCHORED TELEMETRY PINS POINTING EXACTLY TO COMPONENT GEOMETRY -->
+                        <!-- ========================================================================= -->
+
+                        <!-- 1. RPM: Propeller Shaft Flange (Front-Left Chrome Hub) -->
+                        <div class="telemetry-callout" style="top: 54%; left: 8%;">
+                            <div class="telemetry-badge text-[#38d9e6] font-bold">RPM 4,820</div>
+                            <div class="line-down"></div>
+                            <div class="target-dot"></div>
+                        </div>
+
+                        <!-- 2. CHT: Cylinder Head & Cooling Fins (Right Cylinder Bank) -->
+                        <div class="telemetry-callout" style="top: 40%; right: 8%;">
+                            <div class="telemetry-badge text-amber-300 font-bold">CHT 158 °C</div>
+                            <div class="line-down"></div>
+                            <div class="target-dot secondary"></div>
+                        </div>
+
+                        <!-- 3. EGT: Exhaust Manifold Collectors (Bottom-Right Pipe) -->
+                        <div class="telemetry-callout" style="bottom: 12%; right: 18%;">
+                            <div class="target-dot error"></div>
+                            <div class="line-up"></div>
+                            <div class="telemetry-badge text-rose-400 font-bold">EGT 704 °C</div>
+                        </div>
+
+                        <!-- 4. FUEL FLOW: Top Electronic Injection Rail -->
+                        <div class="telemetry-callout" style="top: 8%; left: 34%;">
+                            <div class="telemetry-badge text-white font-semibold">FUEL FLOW 18.4 L/h</div>
+                            <div class="line-down"></div>
+                            <div class="target-dot"></div>
+                        </div>
+
+                        <!-- 5. OIL PRESSURE: Central Crankcase Lubrication Hub -->
+                        <div class="telemetry-callout" style="top: 14%; right: 30%;">
+                            <div class="telemetry-badge text-white font-semibold">OIL PRES 4.2 bar</div>
+                            <div class="line-down"></div>
+                            <div class="target-dot"></div>
+                        </div>
+
+                        <!-- 6. VIBRATION RMS: Engine Mount Stand -->
+                        <div class="telemetry-callout" style="bottom: 24%; left: 38%;">
+                            <div class="telemetry-badge text-white font-semibold">VIBRATION 0.13 g</div>
+                            <div class="line-down"></div>
+                            <div class="target-dot"></div>
+                        </div>
+
+                        <!-- 7. OIL TEMPERATURE: Lower Sump -->
+                        <div class="telemetry-callout" style="bottom: 6%; left: 52%;">
+                            <div class="target-dot"></div>
+                            <div class="line-up"></div>
+                            <div class="telemetry-badge text-white font-semibold">OIL TEMP 96 °C</div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- ========================================================================= -->
+            <!-- BLACKBOX STATE CARD: CENTERED & LIGHTLY MOVED UP FOR BALANCED COCKPIT HUD -->
+            <!-- ========================================================================= -->
+            <div
+                class="absolute bottom-10 left-1/2 -translate-x-1/2 glass-dark-center px-6 py-3.5 shadow-2xl z-30 w-[90%] max-w-[760px] rounded-xs text-white flex flex-col md:flex-row items-center justify-between gap-4 border border-outline-variant/30">
+
+                <!-- Left: Status Badge -->
+                <div class="flex items-center gap-3">
+                    <div class="w-2.5 h-2.5 rounded-full bg-nominal-glow animate-pulse shadow-[0_0_8px_#a4f3ca]"></div>
+                    <div>
+                        <div class="font-label-mono text-[10px] uppercase text-white tracking-widest font-bold">
+                            SYSTEM STATUS: NOMINAL
+                        </div>
+                        <div class="text-[9px] font-label-mono text-[#77d5dc]">
+                            MALE UAV-01 PROPULSION TWIN
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center: Health & RUL -->
+                <div
+                    class="flex items-center gap-6 border-y md:border-y-0 md:border-x border-outline-variant/20 py-2 md:py-0 px-0 md:px-6">
+                    <div>
+                        <div class="text-[9px] font-label-mono text-outline-variant uppercase">DIGITAL TWIN HEALTH</div>
+                        <div class="font-telemetry-data text-[22px] font-bold text-white leading-none">94%</div>
+                    </div>
+                    <div>
+                        <div class="text-[9px] font-label-mono text-outline-variant uppercase">ESTIMATED RUL</div>
+                        <div class="text-[13px] font-telemetry-data text-nominal-glow font-bold">45 HRS</div>
+                    </div>
+                </div>
+
+                <!-- Right: Subsystems -->
+                <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[9px] font-label-mono text-outline-variant">
+                    <div>THERMAL: <span class="text-white font-semibold">96%</span></div>
+                    <div>LUBRICATION: <span class="text-white font-semibold">92%</span></div>
+                    <div>COMBUSTION: <span class="text-white font-semibold">95%</span></div>
+                    <div>MECHANICAL: <span class="text-white font-semibold">94%</span></div>
+                </div>
+
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Scripts -->
+    <script>
+        // 1. Multilingual Predict Word Cycler: English, Tamil, Telugu, Hindi (Indian Languages Only)
+        document.addEventListener('DOMContentLoaded', () => {
+            const words = document.querySelectorAll('.predict-word');
+            if (!words || words.length === 0) return;
+
+            let currentIndex = 0;
+
+            // Initialize first word
+            words.forEach((w, idx) => {
+                if (idx === 0) {
+                    w.classList.add('active');
+                    w.classList.remove('exit');
+                } else {
+                    w.classList.remove('active');
+                    w.classList.remove('exit');
+                }
+            });
+
+            setInterval(() => {
+                const currentWord = words[currentIndex];
+                currentWord.classList.remove('active');
+                currentWord.classList.add('exit');
+
+                currentIndex = (currentIndex + 1) % words.length;
+
+                const nextWord = words[currentIndex];
+                nextWord.classList.remove('exit');
+                nextWord.classList.add('active');
+            }, 1900);
+        });
+
+        // 2. Engine View Mode Switcher (Standard Twin vs Holographic X-Ray & Sensors)
+        function switchEngineView(mode) {
+            const standardImg = document.getElementById('view-standard-img');
+            const xrayImg = document.getElementById('view-xray-img');
+            const btnStandard = document.getElementById('btn-standard');
+            const btnXray = document.getElementById('btn-xray');
+
+            if (mode === 'standard') {
+                standardImg.classList.replace('opacity-0', 'opacity-100');
+                xrayImg.classList.replace('opacity-100', 'opacity-0');
+                btnStandard.classList.add('active');
+                btnXray.classList.remove('active');
+            } else {
+                standardImg.classList.replace('opacity-100', 'opacity-0');
+                xrayImg.classList.replace('opacity-0', 'opacity-100');
+                btnXray.classList.add('active');
+                btnStandard.classList.remove('active');
+            }
+        }
+    </script>
+
+</body>
+
+</html>

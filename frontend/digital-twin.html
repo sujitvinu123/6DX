@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>AERO-TWIN — Live Digital Twin Operations Dashboard</title>
+    
+    <!-- Tailwind CSS with plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <!-- Google Fonts: Chakra Petch, Geist & IBM Plex Mono for aerospace engineering UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Geist:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/aero-twin.css">
+
+    <!-- Global Nav & Theme Engine -->
+    <script src="js/utils.js"></script>
+    <script src="js/nav.js"></script>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-teal": "var(--at-teal)",
+                        "primary-teal-dark": "var(--at-teal-dark)",
+                        "primary-teal-light": "var(--at-teal-light)",
+                        "graphite": "var(--at-graphite)",
+                        "secondary-text": "var(--at-secondary)",
+                        "panel-white": "var(--at-card-bg)",
+                        "panel-border": "var(--at-panel-border)",
+                        "cool-gray": "var(--at-cool-gray)",
+                        "warm-white": "var(--at-panel-bg)",
+                        "eng-amber": "var(--at-caution)",
+                        "eng-red": "var(--at-critical)",
+                        "eng-green": "var(--at-nominal)"
+                    },
+                    fontFamily: {
+                        "headline": ["Geist", "sans-serif"],
+                        "body": ["Geist", "sans-serif"],
+                        "mono": ["'Chakra Petch'", "'IBM Plex Mono'", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Geist', sans-serif;
+            background-color: var(--at-body-bg);
+            color: var(--at-graphite);
+            overflow-x: hidden;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+        .engineering-grid {
+            background-size: 20px 20px;
+            background-image: 
+                linear-gradient(to right, var(--at-grid-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--at-grid-color) 1px, transparent 1px);
+        }
+        .subsystem-card {
+            transition: all 0.25s ease-in-out;
+        }
+        .subsystem-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+        }
+        .fault-highlight {
+            border-color: #DC2626 !important;
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.25) !important;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #F1F5F9; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #007F86; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between engineering-grid antialiased">
+
+<!-- ========================================================================= -->
+<!-- HEADER: AEROSPACE MISSION STATUS BAR                                     -->
+<!-- ========================================================================= -->
+<header class="bg-panel-white border-b border-panel-border sticky top-0 z-40 shadow-xs">
+    <div class="max-w-[1700px] mx-auto px-4 lg:px-8 py-2.5 flex flex-wrap justify-between items-center gap-3">
+        
+        <!-- Left: Logo & Navigation Links -->
+        <div class="flex items-center gap-4">
+            <a href="index.html" class="flex items-center gap-2.5 group">
+                <div class="w-8 h-8 rounded-xs bg-primary-teal text-white flex items-center justify-center font-mono font-bold text-xs shadow-xs group-hover:bg-primary-teal-dark transition-colors">
+                    A
+                </div>
+                <div>
+                    <h1 class="text-sm font-bold font-mono tracking-tight text-graphite flex items-center gap-2">
+                        AERO-TWIN
+                        <span class="text-[10px] font-normal text-secondary-text px-1.5 py-0.2 bg-cool-gray rounded-xs">
+                            DIGITAL TWIN
+                        </span>
+                    </h1>
+                </div>
+            </a>
+            
+            <div class="h-4 w-px bg-panel-border hidden sm:block"></div>
+
+            <nav class="hidden md:flex items-center gap-5 text-xs font-mono">
+                <a href="overview.html" class="text-secondary-text hover:text-graphite transition-colors">OVERVIEW</a>
+                <a href="digital-twin.html" class="text-primary-teal font-bold border-b-2 border-primary-teal pb-0.5">DIGITAL TWIN</a>
+                <a href="engineer.html" class="text-secondary-text hover:text-graphite transition-colors">ENGINEER</a>
+                <a href="maintenance.html" class="text-secondary-text hover:text-graphite transition-colors">MAINTENANCE</a>
+                <a href="replay.html" class="text-secondary-text hover:text-graphite transition-colors">MISSION REPLAY</a>
+            </nav>
+        </div>
+
+        <!-- Right: Telemetry Status, Sequence & Clock -->
+        <div class="flex items-center gap-3 font-mono text-xs">
+            <!-- Telemetry Sequence Counter -->
+            <div class="bg-cool-gray px-2.5 py-1 rounded-xs border border-panel-border flex items-center gap-1.5 font-bold">
+                <span class="text-secondary-text text-[10px]">SEQ:</span>
+                <span class="text-primary-teal text-[11px]" id="dt-seq-counter">----</span>
+            </div>
+
+            <!-- Connection Status Badge -->
+            <div class="bg-[#fffbeb] text-eng-amber px-2.5 py-1 rounded-xs border border-[#fcd34d] flex items-center gap-1.5 font-semibold text-[11px]" id="stream-status-badge">
+                <span class="w-2 h-2 rounded-full bg-eng-amber animate-pulse" id="stream-status-dot"></span>
+                <span id="stream-status-text">CONNECTING...</span>
+            </div>
+
+            <!-- Data Source Tag -->
+            <div class="bg-cool-gray px-2 py-1 rounded-xs border border-panel-border text-[10px] text-secondary-text font-bold" id="dt-source-tag">
+                SOURCE: SIMULATION
+            </div>
+
+            <!-- Last Tick Timestamp -->
+            <div class="text-[10px] text-secondary-text font-mono pl-2 hidden lg:block" id="last-tick-ts">
+                --:--:--
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ========================================================================= -->
+<!-- SUB-HEADER: TELEMETRY STREAM INFO & MISSION CONTROLS BAR                 -->
+<!-- ========================================================================= -->
+<section class="bg-panel-white border-b border-panel-border text-[11px] font-mono py-2">
+    <div class="max-w-[1700px] mx-auto px-4 lg:px-8 flex flex-wrap justify-between items-center gap-4">
+        
+        <div class="flex flex-wrap items-center gap-4 sm:gap-6 text-secondary-text">
+            <div>
+                <span class="text-graphite font-bold">ASSET:</span>
+                <span class="text-secondary-text">UAV-001 / ENGINE-001</span>
+            </div>
+            <div>
+                <span class="text-graphite font-bold">ENGINE TYPE:</span>
+                <span class="text-secondary-text">AERO-PISTON (HORIZONTALLY-OPPOSED 4-CYL)</span>
+            </div>
+            <div>
+                <span class="text-graphite font-bold">MISSION:</span>
+                <span class="text-secondary-text">MALE UAV ISR (4,850 M CRUISE)</span>
+            </div>
+            <div class="hidden xl:block">
+                <span class="text-graphite font-bold">LINEAGE:</span>
+                <span class="text-eng-green font-bold" id="pipeline-lineage-tag">CANONICAL ENGINESTATE</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div class="h-4 w-px bg-panel-border hidden sm:block"></div>
+
+            <!-- Scenario Selector -->
+            <div class="flex items-center gap-1.5">
+                <span class="text-[10px] text-secondary-text uppercase font-semibold">SCENARIO:</span>
+                <select id="dt-scenario-select" onchange="switchScenario(this.value)" class="text-[10px] font-mono font-bold bg-cool-gray border border-panel-border rounded-xs px-2 py-0.5 text-graphite focus:outline-none focus:border-primary-teal cursor-pointer">
+                    <option value="healthy" selected>HEALTHY (NOMINAL CRUISE)</option>
+                    <option value="lubrication">LUBRICATION FAILURE</option>
+                    <option value="misfire">MISFIRE (CYL 3)</option>
+                    <option value="cooling">COOLING DEGRADATION</option>
+                    <option value="intake">INTAKE RESTRICTION</option>
+                    <option value="electrical">ELECTRICAL FAULT</option>
+                    <option value="sensor_drift">SENSOR DRIFT (OIL TEMP)</option>
+                    <option value="cycle">AUTO CYCLE ALL</option>
+                </select>
+            </div>
+
+            <!-- Fault Simulator Trigger Button -->
+            <button onclick="toggleInjectedFault()" id="btn-fault-toggle" class="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-xs border border-eng-amber text-eng-amber hover:bg-[#fffbeb] transition-colors flex items-center gap-1">
+                <span class="material-symbols-outlined text-xs">bolt</span>
+                CYCLE FAULT
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- MAIN DASHBOARD CONTENT AREA                                               -->
+<!-- ========================================================================= -->
+<main class="max-w-[1700px] mx-auto px-4 lg:px-8 py-5 w-full flex-grow space-y-6">
+
+    <!-- ========================================================================= -->
+    <!-- LEVEL 1: LIVE DIGITAL TWIN — MAIN AERO-PISTON ENGINE (TOP LEVEL)          -->
+    <!-- ========================================================================= -->
+    <section class="space-y-4" id="level-1-main-engine">
+        
+        <!-- Section Header -->
+        <div class="flex items-center justify-between border-b border-panel-border pb-2">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-xs bg-primary-teal"></span>
+                <h2 class="text-xs font-bold font-mono tracking-wider text-graphite uppercase">
+                    LEVEL 1 — MAIN AERO-PISTON ENGINE (PRIMARY DIGITAL TWIN)
+                </h2>
+            </div>
+            <div class="flex items-center gap-2 text-[10px] font-mono text-secondary-text">
+                <span class="text-eng-green font-bold flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-eng-green animate-ping"></span>
+                    ACTIVE TWIN RUNTIME
+                </span>
+            </div>
+        </div>
+
+        <!-- Row 1.1: 3D Engine Viewport (65%) + Overall Health & Diagnostics (35%) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+            
+            <!-- LEFT: AUTHENTIC 3D MAIN ENGINE VIEWPORT (8 cols / ~65%) -->
+            <div class="lg:col-span-8 bg-panel-white rounded-md border border-panel-border shadow-xs flex flex-col overflow-hidden">
+                <div class="px-4 py-2 border-b border-panel-border flex flex-wrap justify-between items-center bg-[#FAFCFB] gap-2">
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-xs font-bold font-mono text-graphite tracking-wider uppercase">
+                            LIVE 3D ENGINE VIEWPORT
+                        </span>
+                        <span class="text-[10px] font-mono text-secondary-text px-2 py-0.5 bg-cool-gray rounded-xs">
+                            ASSET: /tabhas/piston/models/engine.glb
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2 font-mono text-[10px]">
+                        <span class="text-eng-green font-bold flex items-center gap-1" id="viewport-sync-status">
+                            <span class="w-2 h-2 rounded-full bg-eng-green"></span>
+                            SYNCHRONIZED
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 3D Engine Model from tabhas/piston -->
+                <div class="relative flex-1 min-h-[460px] bg-[#FFFFFF] flex items-stretch justify-stretch overflow-hidden" id="viewport-3d-wrapper">
+                    <iframe id="tabhas-engine-frame" src="tabhas/piston/dist/index.html" class="w-full h-full min-h-[460px] border-0" style="width: 100%; height: 100%; min-height: 460px; display: block;" title="Aero-Piston 3D Engine Twin"></iframe>
+                </div>
+            </div>
+
+            <!-- RIGHT: OVERALL PROPULSION HEALTH & AI DIAGNOSTIC ENGINE (4 cols / ~35%) -->
+            <div class="lg:col-span-4 flex flex-col gap-4">
+                
+                <!-- Overall Health Main Card -->
+                <div class="bg-panel-white p-4 rounded-md border border-panel-border shadow-xs space-y-3 font-mono" id="health-section">
+                    <div class="flex justify-between items-center border-b border-panel-border pb-2">
+                        <span class="text-xs font-bold text-graphite tracking-wider uppercase">
+                            PROPULSION HEALTH INDEX
+                        </span>
+                        <span class="text-[10px] font-mono font-bold bg-[#f0fdf4] text-eng-green px-2 py-0.5 rounded-xs" id="health-status-badge">
+                            OPTIMAL
+                        </span>
+                    </div>
+
+                    <!-- Large Central Health Score -->
+                    <div class="flex items-baseline justify-between">
+                        <div>
+                            <div class="text-3xl font-bold text-graphite tracking-tight flex items-baseline gap-1">
+                                <span id="health-score-val">--</span><span class="text-lg text-primary-teal">%</span>
+                            </div>
+                            <div class="text-[10px] font-mono text-secondary-text mt-0.5">
+                                OVERALL PROPULSION HEALTH INDEX
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[9px] text-secondary-text uppercase">ML ANOMALY SCORE</div>
+                            <div class="text-xs font-bold text-graphite" id="anomaly-score-display">0.08 / 2.22</div>
+                        </div>
+                    </div>
+
+                    <!-- Subsystem Health Progress Bars -->
+                    <div class="space-y-2 pt-1 text-[10px]">
+                        <div>
+                            <div class="flex justify-between text-secondary-text mb-0.5">
+                                <span>COMBUSTION SYSTEM</span>
+                                <span class="font-bold text-graphite" id="health-comb-val">--%</span>
+                            </div>
+                            <div class="w-full bg-cool-gray h-1.5 rounded-xs overflow-hidden">
+                                <div class="bg-primary-teal h-full rounded-xs transition-all duration-500" style="width: 0%" id="health-comb-bar"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-secondary-text mb-0.5">
+                                <span>LUBRICATION SYSTEM</span>
+                                <span class="font-bold text-graphite" id="health-lub-val">--%</span>
+                            </div>
+                            <div class="w-full bg-cool-gray h-1.5 rounded-xs overflow-hidden">
+                                <div class="bg-primary-teal h-full rounded-xs transition-all duration-500" style="width: 0%" id="health-lub-bar"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-secondary-text mb-0.5">
+                                <span>THERMAL & COOLING</span>
+                                <span class="font-bold text-graphite" id="health-thermal-val">--%</span>
+                            </div>
+                            <div class="w-full bg-cool-gray h-1.5 rounded-xs overflow-hidden">
+                                <div class="bg-primary-teal h-full rounded-xs transition-all duration-500" style="width: 0%" id="health-thermal-bar"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-secondary-text mb-0.5">
+                                <span>MECHANICAL SYSTEM</span>
+                                <span class="font-bold text-graphite" id="health-mech-val">--%</span>
+                            </div>
+                            <div class="w-full bg-cool-gray h-1.5 rounded-xs overflow-hidden">
+                                <div class="bg-primary-teal h-full rounded-xs transition-all duration-500" style="width: 0%" id="health-mech-bar"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-secondary-text mb-0.5">
+                                <span>ELECTRICAL SYSTEM</span>
+                                <span class="font-bold text-graphite" id="health-elec-val">--%</span>
+                            </div>
+                            <div class="w-full bg-cool-gray h-1.5 rounded-xs overflow-hidden">
+                                <div class="bg-primary-teal h-full rounded-xs transition-all duration-500" style="width: 0%" id="health-elec-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Digital Twin State & Fault / Advisory Card -->
+                <div class="bg-panel-white p-4 rounded-md border border-panel-border shadow-xs flex-1 space-y-2.5 font-mono text-[10px]" id="fault-advisory-section">
+                    <div class="flex justify-between items-center border-b border-panel-border pb-1.5">
+                        <span class="font-bold text-graphite tracking-wider uppercase text-xs">
+                            DIAGNOSTICS & ADVISORY
+                        </span>
+                        <span class="text-eng-green font-bold" id="fault-status-badge">NO ACTIVE FAULT</span>
+                    </div>
+
+                    <!-- Fault Display (visible during active faults) -->
+                    <div id="fault-display" class="hidden space-y-2">
+                        <div class="p-2 rounded-xs border border-eng-red bg-[#fef2f2]">
+                            <div class="text-[9px] text-secondary-text">CLASSIFIED FAULT</div>
+                            <div class="text-xs font-bold text-eng-red" id="fault-class-label">--</div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="p-1.5 bg-cool-gray rounded-xs">
+                                <span class="text-secondary-text block">CONFIDENCE:</span>
+                                <strong class="text-graphite" id="fault-confidence-val">--</strong>
+                            </div>
+                            <div class="p-1.5 bg-cool-gray rounded-xs">
+                                <span class="text-secondary-text block">RUL (P50):</span>
+                                <strong class="text-graphite" id="fault-rul-compact">--</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advisory Display -->
+                    <div id="advisory-display" class="p-2 rounded-xs border border-panel-border bg-[#FAFCFB]">
+                        <div class="text-[9px] text-secondary-text uppercase font-bold">OPERATIONAL ADVISORY</div>
+                        <div class="text-xs text-graphite mt-0.5" id="advisory-message">All propulsion systems operating nominally.</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block">SENSOR INTEGRITY:</span>
+                            <strong class="text-graphite" id="sensor-health-status">ALL VALID</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block">DATA FRESHNESS:</span>
+                            <strong class="text-eng-green" id="data-freshness-status">SYNCED (1 HZ)</strong>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Row 1.2: Main Engine Live Telemetry Strip (Authentic 27-Channel Contract) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 font-mono">
+            
+            <!-- 1. RPM -->
+            <div class="bg-panel-white p-3 rounded-md border border-panel-border shadow-xs">
+                <div class="flex justify-between items-center text-[10px] text-secondary-text">
+                    <span>RPM (TACH)</span>
+                    <span class="material-symbols-outlined text-xs text-primary-teal">speed</span>
+                </div>
+                <div class="text-xl font-bold text-graphite tracking-tight mt-1" id="tel-rpm">4,247</div>
+                <div class="text-[9px] text-eng-green font-semibold mt-0.5" id="tel-rpm-band">NOMINAL CRUISE</div>
+            </div>
+
+            <!-- 2. CHT Max -->
+            <div class="bg-panel-white p-3 rounded-md border border-panel-border shadow-xs">
+                <div class="flex justify-between items-center text-[10px] text-secondary-text">
+                    <span>CHT (CYL HEAD)</span>
+                    <span class="material-symbols-outlined text-xs text-primary-teal">thermostat</span>
+                </div>
+                <div class="text-xl font-bold text-graphite tracking-tight mt-1" id="tel-cht">100.5 <span class="text-xs font-normal">°C</span></div>
+                <div class="text-[9px] text-eng-green font-semibold mt-0.5" id="tel-cht-band">STABLE</div>
+            </div>
+
+            <!-- 3. EGT Avg -->
+            <div class="bg-panel-white p-3 rounded-md border border-panel-border shadow-xs">
+                <div class="flex justify-between items-center text-[10px] text-secondary-text">
+                    <span>EGT (EXHAUST)</span>
+                    <span class="material-symbols-outlined text-xs text-primary-teal">local_fire_department</span>
+                </div>
+                <div class="text-xl font-bold text-graphite tracking-tight mt-1" id="tel-egt">659 <span class="text-xs font-normal">°C</span></div>
+                <div class="text-[9px] text-eng-green font-semibold mt-0.5" id="tel-egt-band">BALANCED</div>
+            </div>
+
+            <!-- 4. Oil Pressure -->
+            <div class="bg-panel-white p-3 rounded-md border border-panel-border shadow-xs">
+                <div class="flex justify-between items-center text-[10px] text-secondary-text">
+                    <span>OIL PRESSURE</span>
+                    <span class="material-symbols-outlined text-xs text-primary-teal">compress</span>
+                </div>
+                <div class="text-xl font-bold text-graphite tracking-tight mt-1" id="tel-oilp">3.49 <span class="text-xs font-normal">bar</span></div>
+                <div class="text-[9px] text-eng-green font-semibold mt-0.5" id="tel-oilp-band">NOMINAL</div>
+            </div>
+
+            <!-- 5. Oil Temp -->
+            <div class="bg-panel-white p-3 rounded-md border border-panel-border shadow-xs">
+                <div class="flex justify-between items-center text-[10px] text-secondary-text">
+                    <span>OIL TEMP</span>
+                    <span class="material-symbols-outlined text-xs text-primary-teal">device_thermostat</span>
+                </div>
+                <div class="text-xl font-bold text-graphite tracking-tight mt-1" id="tel-oilt">101.5 <span class="text-xs font-normal">°C</span></div>
+                <div class="text-[9px] text-eng-green font-semibold mt-0.5" id="tel-oilt-band">STABLE</div>
+            </div>
+
+            <!-- 6. Fuel Flow -->
+            <div class="bg-panel-white p-3 rounded-md border border-panel-border shadow-xs">
+                <div class="flex justify-between items-center text-[10px] text-secondary-text">
+                    <span>FUEL FLOW</span>
+                    <span class="material-symbols-outlined text-xs text-primary-teal">water_drop</span>
+                </div>
+                <div class="text-xl font-bold text-graphite tracking-tight mt-1" id="tel-ff">7.95 <span class="text-xs font-normal">L/h</span></div>
+                <div class="text-[9px] text-eng-green font-semibold mt-0.5" id="tel-ff-band">CRUISE FLOW</div>
+            </div>
+
+            <!-- 7. Vibration RMS -->
+            <div class="bg-panel-white p-3 rounded-md border border-panel-border shadow-xs">
+                <div class="flex justify-between items-center text-[10px] text-secondary-text">
+                    <span>VIB (RMS)</span>
+                    <span class="material-symbols-outlined text-xs text-primary-teal">vibration</span>
+                </div>
+                <div class="text-xl font-bold text-graphite tracking-tight mt-1" id="tel-vib">0.650 <span class="text-xs font-normal">g</span></div>
+                <div class="text-[9px] text-eng-green font-semibold mt-0.5" id="tel-vib-band">SMOOTH</div>
+            </div>
+
+            <!-- 8. MAP / Manifold Pressure -->
+            <div class="bg-panel-white p-3 rounded-md border border-panel-border shadow-xs">
+                <div class="flex justify-between items-center text-[10px] text-secondary-text">
+                    <span>MAP (MANIFOLD)</span>
+                    <span class="material-symbols-outlined text-xs text-primary-teal">air</span>
+                </div>
+                <div class="text-xl font-bold text-graphite tracking-tight mt-1" id="tel-map">49.1 <span class="text-xs font-normal">kPa</span></div>
+                <div class="text-[9px] text-eng-green font-semibold mt-0.5" id="tel-map-band">NOMINAL</div>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- LEVEL 2: NINE ENGINE SUBSYSTEMS (3 × 3 SYSTEM GRID)                       -->
+    <!-- ========================================================================= -->
+    <section class="space-y-4 pt-2" id="level-2-nine-subsystems">
+        
+        <!-- Section Header -->
+        <div class="flex flex-wrap items-center justify-between border-b border-panel-border pb-2 gap-2">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-xs bg-primary-teal"></span>
+                <h2 class="text-xs font-bold font-mono tracking-wider text-graphite uppercase">
+                    LEVEL 2 — NINE ENGINE SUBSYSTEMS (INTERACTIVE 3D SUBSYSTEM DIGITAL TWINS)
+                </h2>
+            </div>
+            <div class="flex items-center gap-3 text-[10px] font-mono text-secondary-text">
+                <span class="text-secondary-text">3 × 3 CANONICAL SUBSYSTEM ARCHITECTURE</span>
+                <span class="px-2 py-0.5 bg-cool-gray rounded-xs font-bold text-graphite">9 ASSETS LOADED</span>
+            </div>
+        </div>
+
+        <!-- 3 × 3 Subsystems Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            
+            <!-- ================================================================= -->
+            <!-- 1. COMBUSTION SYSTEM (SYS-01)                                      -->
+            <!-- ================================================================= -->
+            <div class="bg-panel-white rounded-md border border-panel-border shadow-xs flex flex-col subsystem-card overflow-hidden" id="card-combustion">
+                <div class="px-3.5 py-2 border-b border-panel-border flex justify-between items-center bg-[#FAFCFB]">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-primary-teal/10 text-primary-teal rounded-xs">SYS-01</span>
+                        <h3 class="text-xs font-bold font-mono text-graphite uppercase">COMBUSTION SYSTEM</h3>
+                    </div>
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" id="sub-health-combustion">
+                        96.2% OPTIMAL
+                    </span>
+                </div>
+                
+                <!-- 3D Subsystem Viewer -->
+                <div class="h-[230px] bg-[#FFFFFF] relative overflow-hidden">
+                    <iframe src="nine-systems/index.html?system=combustion&card=true" class="w-full h-full border-0" title="Combustion System 3D Model" loading="lazy"></iframe>
+                </div>
+
+                <!-- Live Subsystem Telemetry Readout -->
+                <div class="p-3 bg-panel-white border-t border-panel-border space-y-2 font-mono text-[10px]">
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">RPM:</span>
+                            <strong class="text-graphite text-xs" id="sub-comb-rpm">4,247</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">CHT (CYL 3):</span>
+                            <strong class="text-graphite text-xs" id="sub-comb-cht3">100.2 °C</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">EGT (CYL 3):</span>
+                            <strong class="text-graphite text-xs" id="sub-comb-egt3">659.0 °C</strong>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-[9px] pt-1 text-secondary-text border-t border-panel-border/60">
+                        <span>INJ TIMING: <strong class="text-graphite" id="sub-comb-inj">21.5° BTDC</strong></span>
+                        <span class="text-eng-green font-bold" id="sub-comb-diag">COMBUSTION STABLE</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- 2. FUEL SYSTEM (SYS-02)                                           -->
+            <!-- ================================================================= -->
+            <div class="bg-panel-white rounded-md border border-panel-border shadow-xs flex flex-col subsystem-card overflow-hidden" id="card-fuel">
+                <div class="px-3.5 py-2 border-b border-panel-border flex justify-between items-center bg-[#FAFCFB]">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-primary-teal/10 text-primary-teal rounded-xs">SYS-02</span>
+                        <h3 class="text-xs font-bold font-mono text-graphite uppercase">FUEL SYSTEM</h3>
+                    </div>
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" id="sub-health-fuel">
+                        96.2% OPTIMAL
+                    </span>
+                </div>
+                
+                <!-- 3D Subsystem Viewer -->
+                <div class="h-[230px] bg-[#FFFFFF] relative overflow-hidden">
+                    <iframe src="nine-systems/index.html?system=fuel&card=true" class="w-full h-full border-0" title="Fuel System 3D Model" loading="lazy"></iframe>
+                </div>
+
+                <!-- Live Subsystem Telemetry Readout -->
+                <div class="p-3 bg-panel-white border-t border-panel-border space-y-2 font-mono text-[10px]">
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">FUEL FLOW:</span>
+                            <strong class="text-graphite text-xs" id="sub-fuel-flow">7.95 L/h</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">FUEL PRESS:</span>
+                            <strong class="text-graphite text-xs" id="sub-fuel-p">3.05 bar</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">INJ TIMING:</span>
+                            <strong class="text-graphite text-xs" id="sub-fuel-timing">21.5°</strong>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-[9px] pt-1 text-secondary-text border-t border-panel-border/60">
+                        <span>DELIVERY: <strong class="text-graphite">CLOSED LOOP</strong></span>
+                        <span class="text-eng-green font-bold" id="sub-fuel-diag">SUPPLY NOMINAL</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- 3. LUBRICATION SYSTEM (SYS-03)                                    -->
+            <!-- ================================================================= -->
+            <div class="bg-panel-white rounded-md border border-panel-border shadow-xs flex flex-col subsystem-card overflow-hidden" id="card-lubrication">
+                <div class="px-3.5 py-2 border-b border-panel-border flex justify-between items-center bg-[#FAFCFB]">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-primary-teal/10 text-primary-teal rounded-xs">SYS-03</span>
+                        <h3 class="text-xs font-bold font-mono text-graphite uppercase">LUBRICATION SYSTEM</h3>
+                    </div>
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" id="sub-health-lubrication">
+                        95.8% OPTIMAL
+                    </span>
+                </div>
+                
+                <!-- 3D Subsystem Viewer -->
+                <div class="h-[230px] bg-[#FFFFFF] relative overflow-hidden">
+                    <iframe src="nine-systems/index.html?system=lubrication&card=true" class="w-full h-full border-0" title="Lubrication System 3D Model" loading="lazy"></iframe>
+                </div>
+
+                <!-- Live Subsystem Telemetry Readout -->
+                <div class="p-3 bg-panel-white border-t border-panel-border space-y-2 font-mono text-[10px]">
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">OIL PRESS:</span>
+                            <strong class="text-graphite text-xs" id="sub-lub-oilp">3.49 bar</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">OIL TEMP:</span>
+                            <strong class="text-graphite text-xs" id="sub-lub-oilt">101.5 °C</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">VIB KURTOSIS:</span>
+                            <strong class="text-graphite text-xs" id="sub-lub-kurt">2.98</strong>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-[9px] pt-1 text-secondary-text border-t border-panel-border/60">
+                        <span>FILM INTEGRITY: <strong class="text-graphite" id="sub-lub-film">HYDRODYNAMIC</strong></span>
+                        <span class="text-eng-green font-bold" id="sub-lub-diag">PRESSURE NOMINAL</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- 4. COOLING SYSTEM (SYS-04)                                        -->
+            <!-- ================================================================= -->
+            <div class="bg-panel-white rounded-md border border-panel-border shadow-xs flex flex-col subsystem-card overflow-hidden" id="card-cooling">
+                <div class="px-3.5 py-2 border-b border-panel-border flex justify-between items-center bg-[#FAFCFB]">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-primary-teal/10 text-primary-teal rounded-xs">SYS-04</span>
+                        <h3 class="text-xs font-bold font-mono text-graphite uppercase">COOLING SYSTEM</h3>
+                    </div>
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" id="sub-health-cooling">
+                        96.5% OPTIMAL
+                    </span>
+                </div>
+                
+                <!-- 3D Subsystem Viewer -->
+                <div class="h-[230px] bg-[#FFFFFF] relative overflow-hidden">
+                    <iframe src="nine-systems/index.html?system=cooling&card=true" class="w-full h-full border-0" title="Cooling System 3D Model" loading="lazy"></iframe>
+                </div>
+
+                <!-- Live Subsystem Telemetry Readout -->
+                <div class="p-3 bg-panel-white border-t border-panel-border space-y-2 font-mono text-[10px]">
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">COOLANT T:</span>
+                            <strong class="text-graphite text-xs" id="sub-cool-temp">88.0 °C</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">MAX CHT:</span>
+                            <strong class="text-graphite text-xs" id="sub-cool-chtmax">100.5 °C</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">AMBIENT (OAT):</span>
+                            <strong class="text-graphite text-xs" id="sub-cool-oat">-10.9 °C</strong>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-[9px] pt-1 text-secondary-text border-t border-panel-border/60">
+                        <span>CIRCUIT: <strong class="text-graphite">LIQUID / RAM-AIR</strong></span>
+                        <span class="text-eng-green font-bold" id="sub-cool-diag">THERMAL NOMINAL</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- 5. MECHANICAL SYSTEM (SYS-05)                                     -->
+            <!-- ================================================================= -->
+            <div class="bg-panel-white rounded-md border border-panel-border shadow-xs flex flex-col subsystem-card overflow-hidden" id="card-mechanical">
+                <div class="px-3.5 py-2 border-b border-panel-border flex justify-between items-center bg-[#FAFCFB]">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-primary-teal/10 text-primary-teal rounded-xs">SYS-05</span>
+                        <h3 class="text-xs font-bold font-mono text-graphite uppercase">MECHANICAL SYSTEM</h3>
+                    </div>
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" id="sub-health-mechanical">
+                        95.4% OPTIMAL
+                    </span>
+                </div>
+                
+                <!-- 3D Subsystem Viewer -->
+                <div class="h-[230px] bg-[#FFFFFF] relative overflow-hidden">
+                    <iframe src="nine-systems/index.html?system=mechanical&card=true" class="w-full h-full border-0" title="Mechanical System 3D Model" loading="lazy"></iframe>
+                </div>
+
+                <!-- Live Subsystem Telemetry Readout -->
+                <div class="p-3 bg-panel-white border-t border-panel-border space-y-2 font-mono text-[10px]">
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">VIB (RMS):</span>
+                            <strong class="text-graphite text-xs" id="sub-mech-vib">0.650 g</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">VIB 1X:</span>
+                            <strong class="text-graphite text-xs" id="sub-mech-1x">0.320 g</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">ENGINE LOAD:</span>
+                            <strong class="text-graphite text-xs" id="sub-mech-load">42.1 %</strong>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-[9px] pt-1 text-secondary-text border-t border-panel-border/60">
+                        <span>CRANKSHAFT: <strong class="text-graphite">BALANCED</strong></span>
+                        <span class="text-eng-green font-bold" id="sub-mech-diag">KINEMATICS NOMINAL</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- 6. ELECTRICAL SYSTEM (SYS-06)                                     -->
+            <!-- ================================================================= -->
+            <div class="bg-panel-white rounded-md border border-panel-border shadow-xs flex flex-col subsystem-card overflow-hidden" id="card-electrical">
+                <div class="px-3.5 py-2 border-b border-panel-border flex justify-between items-center bg-[#FAFCFB]">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-primary-teal/10 text-primary-teal rounded-xs">SYS-06</span>
+                        <h3 class="text-xs font-bold font-mono text-graphite uppercase">ELECTRICAL SYSTEM</h3>
+                    </div>
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" id="sub-health-electrical">
+                        98.0% OPTIMAL
+                    </span>
+                </div>
+                
+                <!-- 3D Subsystem Viewer -->
+                <div class="h-[230px] bg-[#FFFFFF] relative overflow-hidden">
+                    <iframe src="nine-systems/index.html?system=electrical&card=true" class="w-full h-full border-0" title="Electrical System 3D Model" loading="lazy"></iframe>
+                </div>
+
+                <!-- Live Subsystem Telemetry Readout -->
+                <div class="p-3 bg-panel-white border-t border-panel-border space-y-2 font-mono text-[10px]">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">BATTERY VOLTAGE:</span>
+                            <strong class="text-graphite text-xs" id="sub-elec-volt">14.20 V</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">ALT CURRENT:</span>
+                            <strong class="text-graphite text-xs" id="sub-elec-curr">11.55 A</strong>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-[9px] pt-1 text-secondary-text border-t border-panel-border/60">
+                        <span>BUS STATUS: <strong class="text-graphite">28V MAIN REGULATED</strong></span>
+                        <span class="text-eng-green font-bold" id="sub-elec-diag">CHARGING NORMAL</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- 7. AIR INTAKE SYSTEM (SYS-07)                                     -->
+            <!-- ================================================================= -->
+            <div class="bg-panel-white rounded-md border border-panel-border shadow-xs flex flex-col subsystem-card overflow-hidden" id="card-airintake">
+                <div class="px-3.5 py-2 border-b border-panel-border flex justify-between items-center bg-[#FAFCFB]">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-primary-teal/10 text-primary-teal rounded-xs">SYS-07</span>
+                        <h3 class="text-xs font-bold font-mono text-graphite uppercase">AIR INTAKE SYSTEM</h3>
+                    </div>
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" id="sub-health-airintake">
+                        96.2% OPTIMAL
+                    </span>
+                </div>
+                
+                <!-- 3D Subsystem Viewer -->
+                <div class="h-[230px] bg-[#FFFFFF] relative overflow-hidden">
+                    <iframe src="nine-systems/index.html?system=airIntake&card=true" class="w-full h-full border-0" title="Air Intake System 3D Model" loading="lazy"></iframe>
+                </div>
+
+                <!-- Live Subsystem Telemetry Readout -->
+                <div class="p-3 bg-panel-white border-t border-panel-border space-y-2 font-mono text-[10px]">
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">MANIFOLD (MAP):</span>
+                            <strong class="text-graphite text-xs" id="sub-intake-map">49.1 kPa</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">THROTTLE:</span>
+                            <strong class="text-graphite text-xs" id="sub-intake-throt">72.0 %</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">AMBIENT PRESS:</span>
+                            <strong class="text-graphite text-xs" id="sub-intake-pamb">61.7 kPa</strong>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-[9px] pt-1 text-secondary-text border-t border-panel-border/60">
+                        <span>INDUCTION: <strong class="text-graphite">TURBO-NORMALIZED</strong></span>
+                        <span class="text-eng-green font-bold" id="sub-intake-diag">AIRFLOW UNRESTRICTED</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- 8. EXHAUST SYSTEM (SYS-08)                                        -->
+            <!-- ================================================================= -->
+            <div class="bg-panel-white rounded-md border border-panel-border shadow-xs flex flex-col subsystem-card overflow-hidden" id="card-exhaust">
+                <div class="px-3.5 py-2 border-b border-panel-border flex justify-between items-center bg-[#FAFCFB]">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-primary-teal/10 text-primary-teal rounded-xs">SYS-08</span>
+                        <h3 class="text-xs font-bold font-mono text-graphite uppercase">EXHAUST SYSTEM</h3>
+                    </div>
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" id="sub-health-exhaust">
+                        96.5% OPTIMAL
+                    </span>
+                </div>
+                
+                <!-- 3D Subsystem Viewer -->
+                <div class="h-[230px] bg-[#FFFFFF] relative overflow-hidden">
+                    <iframe src="nine-systems/index.html?system=exhaust&card=true" class="w-full h-full border-0" title="Exhaust System 3D Model" loading="lazy"></iframe>
+                </div>
+
+                <!-- Live Subsystem Telemetry Readout -->
+                <div class="p-3 bg-panel-white border-t border-panel-border space-y-2 font-mono text-[10px]">
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">EGT CYL 1:</span>
+                            <strong class="text-graphite text-xs" id="sub-exh-egt1">658 °C</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">EGT CYL 2:</span>
+                            <strong class="text-graphite text-xs" id="sub-exh-egt2">659 °C</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">EGT SPREAD Z:</span>
+                            <strong class="text-graphite text-xs" id="sub-exh-spread">0.35 σ</strong>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-[9px] pt-1 text-secondary-text border-t border-panel-border/60">
+                        <span>MANIFOLD: <strong class="text-graphite">SCAVENGE 4-INTO-2</strong></span>
+                        <span class="text-eng-green font-bold" id="sub-exh-diag">THERMAL BALANCE OK</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- 9. PROPULSION SYSTEM (SYS-09)                                     -->
+            <!-- ================================================================= -->
+            <div class="bg-panel-white rounded-md border border-panel-border shadow-xs flex flex-col subsystem-card overflow-hidden" id="card-propulsion">
+                <div class="px-3.5 py-2 border-b border-panel-border flex justify-between items-center bg-[#FAFCFB]">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-primary-teal/10 text-primary-teal rounded-xs">SYS-09</span>
+                        <h3 class="text-xs font-bold font-mono text-graphite uppercase">PROPULSION SYSTEM</h3>
+                    </div>
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" id="sub-health-propulsion">
+                        95.4% OPTIMAL
+                    </span>
+                </div>
+                
+                <!-- 3D Subsystem Viewer -->
+                <div class="h-[230px] bg-[#FFFFFF] relative overflow-hidden">
+                    <iframe src="nine-systems/index.html?system=propulsion&card=true" class="w-full h-full border-0" title="Propulsion System 3D Model" loading="lazy"></iframe>
+                </div>
+
+                <!-- Live Subsystem Telemetry Readout -->
+                <div class="p-3 bg-panel-white border-t border-panel-border space-y-2 font-mono text-[10px]">
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">ENGINE RPM:</span>
+                            <strong class="text-graphite text-xs" id="sub-prop-rpm">4,247</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">ALTITUDE:</span>
+                            <strong class="text-graphite text-xs" id="sub-prop-alt">4,850 m</strong>
+                        </div>
+                        <div class="p-1.5 bg-cool-gray rounded-xs">
+                            <span class="text-secondary-text block text-[9px]">PHI SCORE:</span>
+                            <strong class="text-graphite text-xs" id="sub-prop-phi">95.4 %</strong>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-[9px] pt-1 text-secondary-text border-t border-panel-border/60">
+                        <span>MISSION STATUS: <strong class="text-graphite">ISR PATROL STATION</strong></span>
+                        <span class="text-eng-green font-bold" id="sub-prop-diag">THRUST NOMINAL</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+<!-- ========================================================================= -->
+<!-- FOOTER                                                                    -->
+<!-- ========================================================================= -->
+<footer class="bg-panel-white border-t border-panel-border py-3 text-[11px] font-mono text-secondary-text mt-8">
+    <div class="max-w-[1700px] mx-auto px-4 lg:px-8 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center gap-4">
+            <span class="font-bold text-graphite">AERO-TWIN DIGITAL TWIN ARCHITECTURE</span>
+            <span class="hidden sm:inline">•</span>
+            <span>HORIZONTALLY-OPPOSED 4-CYLINDER ENGINE + 9 SUBSYSTEM DIGITAL TWINS</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="text-eng-green font-bold flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-eng-green"></span>
+                SYNCHRONIZED CONTINUOUS RUNTIME
+            </span>
+            <span class="text-secondary-text" id="live-utc-clock">UTC --:--:--</span>
+        </div>
+    </div>
+</footer>
+
+<!-- Central Engine State Store & WebSocket Protocol -->
+<script src="js/engine-state.js"></script>
+<script src="js/websocket-client.js"></script>
+<script src="js/mock-sim.js"></script>
+<script src="js/nav.js"></script>
+
+<script>
+    // =========================================================================
+    // AUTHORITATIVE ENGINESTATE SUBSCRIPTION DRIVER (LEVEL 1 & LEVEL 2)
+    // =========================================================================
+    var scenarioCycleList = ['healthy', 'lubrication', 'misfire', 'cooling', 'intake', 'electrical', 'sensor_drift'];
+    var scenarioCycleIdx = 0;
+
+    function switchScenario(scenarioName) {
+        if (window.AeroWS) {
+            window.AeroWS.setScenario(scenarioName);
+        }
+        var select = document.getElementById('dt-scenario-select');
+        if (select) select.value = scenarioName;
+    }
+
+    function toggleInjectedFault() {
+        scenarioCycleIdx = (scenarioCycleIdx + 1) % scenarioCycleList.length;
+        var nextScenario = scenarioCycleList[scenarioCycleIdx];
+        switchScenario(nextScenario);
+    }
+
+    // Subscribe to Authoritative State Store
+    AeroState.subscribe(function(state) {
+        if (!state) return;
+        var m = state.measured || {};
+        var h = state.health || {};
+        var a = state.anomaly || {};
+        var d = state.derived || {};
+        var fault = state.fault;
+        var adv = state.advisory;
+        var seq = state.sequenceNumber != null ? state.sequenceNumber : '----';
+
+        // 1. Top Header Sequence & Status
+        var seqEl = document.getElementById('dt-seq-counter');
+        if (seqEl) seqEl.innerText = seq;
+
+        var sourceEl = document.getElementById('dt-source-tag');
+        if (sourceEl) {
+            sourceEl.innerText = state.flightId && state.flightId.indexOf('SIM') !== -1 ? 'SOURCE: SIMULATION' : 'SOURCE: LIVE TELEMETRY';
+        }
+
+        var streamBadge = document.getElementById('stream-status-badge');
+        var streamText = document.getElementById('stream-status-text');
+        var streamDot = document.getElementById('stream-status-dot');
+        if (streamBadge && streamText) {
+            if (state.connectionState === 'CONNECTED') {
+                streamBadge.className = "bg-[#f0fdf4] text-eng-green px-2.5 py-1 rounded-xs border border-[#86efac] flex items-center gap-1.5 font-semibold text-[11px]";
+                streamText.innerText = "CONNECTED (1 HZ)";
+                if (streamDot) streamDot.className = "w-2 h-2 rounded-full bg-eng-green";
+            } else if (state.connectionState === 'RECONNECTING') {
+                streamBadge.className = "bg-[#fffbeb] text-eng-amber px-2.5 py-1 rounded-xs border border-[#fcd34d] flex items-center gap-1.5 font-semibold text-[11px]";
+                streamText.innerText = "RECONNECTING...";
+                if (streamDot) streamDot.className = "w-2 h-2 rounded-full bg-eng-amber animate-pulse";
+            } else {
+                streamBadge.className = "bg-[#fef2f2] text-eng-red px-2.5 py-1 rounded-xs border border-[#fca5a5] flex items-center gap-1.5 font-semibold text-[11px]";
+                streamText.innerText = "DISCONNECTED";
+                if (streamDot) streamDot.className = "w-2 h-2 rounded-full bg-eng-red";
+            }
+        }
+
+        var lastTickEl = document.getElementById('last-tick-ts');
+        if (lastTickEl && state.lastTickTime) {
+            lastTickEl.innerText = new Date(state.lastTickTime).toTimeString().split(' ')[0];
+        }
+
+        // 2. LEVEL 1: Main Engine Overall Health
+        var phi = h.overall_index != null ? Number(h.overall_index).toFixed(1) : '--';
+        var phiValEl = document.getElementById('health-score-val');
+        if (phiValEl) phiValEl.innerText = phi;
+
+        var statusBadge = document.getElementById('health-status-badge');
+        if (statusBadge) {
+            if (h.overall_index >= 90) {
+                statusBadge.className = "text-[10px] font-mono font-bold bg-[#f0fdf4] text-eng-green border border-[#86efac] px-2 py-0.5 rounded-xs";
+                statusBadge.innerText = "OPTIMAL";
+            } else if (h.overall_index >= 75) {
+                statusBadge.className = "text-[10px] font-mono font-bold bg-[#fffbeb] text-eng-amber border border-[#fcd34d] px-2 py-0.5 rounded-xs";
+                statusBadge.innerText = "DEGRADED";
+            } else {
+                statusBadge.className = "text-[10px] font-mono font-bold bg-[#fef2f2] text-eng-red border border-[#fca5a5] px-2 py-0.5 rounded-xs";
+                statusBadge.innerText = "CRITICAL";
+            }
+        }
+
+        // Subsystem progress bars in Level 1 panel
+        function setBar(idVal, idBar, val) {
+            var v = val != null ? Number(val).toFixed(1) : '--';
+            var num = val != null ? Number(val) : 0;
+            var elV = document.getElementById(idVal);
+            var elB = document.getElementById(idBar);
+            if (elV) elV.innerText = v + '%';
+            if (elB) {
+                elB.style.width = Math.min(100, Math.max(0, num)) + '%';
+                if (num < 50) elB.className = "bg-eng-red h-full rounded-xs transition-all duration-500";
+                else if (num < 80) elB.className = "bg-eng-amber h-full rounded-xs transition-all duration-500";
+                else elB.className = "bg-primary-teal h-full rounded-xs transition-all duration-500";
+            }
+        }
+
+        setBar('health-comb-val', 'health-comb-bar', h.combustion);
+        setBar('health-lub-val', 'health-lub-bar', h.lubrication);
+        setBar('health-thermal-val', 'health-thermal-bar', h.thermal);
+        setBar('health-mech-val', 'health-mech-bar', h.mechanical);
+        setBar('health-elec-val', 'health-elec-bar', h.electrical);
+
+        // ML Anomaly Score Display
+        var anomEl = document.getElementById('anomaly-score-display');
+        if (anomEl && a.score != null) {
+            anomEl.innerText = Number(a.score).toFixed(2) + ' / ' + Number(a.threshold || 2.22).toFixed(2);
+            anomEl.className = a.detected ? "text-xs font-bold text-eng-red" : "text-xs font-bold text-graphite";
+        }
+
+        // Fault & Advisory in Level 1
+        var faultBadge = document.getElementById('fault-status-badge');
+        var faultDisplay = document.getElementById('fault-display');
+        var faultClassLabel = document.getElementById('fault-class-label');
+        var faultConfVal = document.getElementById('fault-confidence-val');
+        var faultRulVal = document.getElementById('fault-rul-compact');
+        var advisoryMsg = document.getElementById('advisory-message');
+
+        if (fault && fault.class) {
+            if (faultBadge) {
+                faultBadge.innerText = fault.class.toUpperCase();
+                faultBadge.className = "text-eng-red font-bold";
+            }
+            if (faultDisplay) faultDisplay.classList.remove('hidden');
+            if (faultClassLabel) faultClassLabel.innerText = fault.class.replace('_', ' ');
+            if (faultConfVal) faultConfVal.innerText = ((fault.confidence || 0.98) * 100).toFixed(1) + '%';
+            if (faultRulVal && state.rul && state.rul.p50 != null) {
+                faultRulVal.innerText = state.rul.p50.toFixed(0) + ' min';
+            }
+        } else {
+            if (faultBadge) {
+                faultBadge.innerText = "NO ACTIVE FAULT";
+                faultBadge.className = "text-eng-green font-bold";
+            }
+            if (faultDisplay) faultDisplay.classList.add('hidden');
+        }
+
+        if (adv && adv.message && advisoryMsg) {
+            advisoryMsg.innerText = adv.message;
+        }
+
+        // 3. Level 1 Live Telemetry Strip
+        if (m.rpm != null) document.getElementById('tel-rpm').innerText = Number(m.rpm).toFixed(0);
+        if (d.cht_max_c != null) document.getElementById('tel-cht').innerHTML = Number(d.cht_max_c).toFixed(1) + ' <span class="text-xs font-normal">°C</span>';
+        else if (m.cht_3_c != null) document.getElementById('tel-cht').innerHTML = Number(m.cht_3_c).toFixed(1) + ' <span class="text-xs font-normal">°C</span>';
+        if (m.egt_3_c != null) document.getElementById('tel-egt').innerHTML = Number(m.egt_3_c).toFixed(0) + ' <span class="text-xs font-normal">°C</span>';
+        if (m.oil_pressure_bar != null) document.getElementById('tel-oilp').innerHTML = Number(m.oil_pressure_bar).toFixed(2) + ' <span class="text-xs font-normal">bar</span>';
+        if (m.oil_temp_c != null) document.getElementById('tel-oilt').innerHTML = Number(m.oil_temp_c).toFixed(1) + ' <span class="text-xs font-normal">°C</span>';
+        if (m.fuel_flow_lph != null) document.getElementById('tel-ff').innerHTML = Number(m.fuel_flow_lph).toFixed(2) + ' <span class="text-xs font-normal">L/h</span>';
+        if (m.vib_rms_g != null) document.getElementById('tel-vib').innerHTML = Number(m.vib_rms_g).toFixed(3) + ' <span class="text-xs font-normal">g</span>';
+        if (m.map_kpa != null) document.getElementById('tel-map').innerHTML = Number(m.map_kpa).toFixed(1) + ' <span class="text-xs font-normal">kPa</span>';
+
+        // 4. LEVEL 2: NINE SUBSYSTEM CARDS (SYNCHRONIZED)
+        
+        // --- 1. COMBUSTION SYSTEM ---
+        var combH = h.combustion != null ? Number(h.combustion).toFixed(1) : '--';
+        var subCombH = document.getElementById('sub-health-combustion');
+        if (subCombH) {
+            subCombH.innerText = combH + '% ' + (h.combustion >= 85 ? 'OPTIMAL' : h.combustion >= 50 ? 'DEGRADED' : 'CRITICAL');
+            subCombH.className = h.combustion >= 85 ? "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" : "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-red/10 text-eng-red";
+        }
+        if (m.rpm != null) document.getElementById('sub-comb-rpm').innerText = Number(m.rpm).toFixed(0);
+        if (m.cht_3_c != null) document.getElementById('sub-comb-cht3').innerText = Number(m.cht_3_c).toFixed(1) + ' °C';
+        if (m.egt_3_c != null) document.getElementById('sub-comb-egt3').innerText = Number(m.egt_3_c).toFixed(1) + ' °C';
+        if (m.injection_timing_deg != null) document.getElementById('sub-comb-inj').innerText = Number(m.injection_timing_deg).toFixed(1) + '° BTDC';
+        var isMisfire = fault && fault.class === 'MISFIRE';
+        var cardComb = document.getElementById('card-combustion');
+        var diagComb = document.getElementById('sub-comb-diag');
+        if (cardComb) {
+            if (isMisfire) {
+                cardComb.classList.add('fault-highlight');
+                if (diagComb) { diagComb.innerText = "MISFIRE DETECTED (CYL 3)"; diagComb.className = "text-eng-red font-bold"; }
+            } else {
+                cardComb.classList.remove('fault-highlight');
+                if (diagComb) { diagComb.innerText = "COMBUSTION STABLE"; diagComb.className = "text-eng-green font-bold"; }
+            }
+        }
+
+        // --- 2. FUEL SYSTEM ---
+        var subFuelH = document.getElementById('sub-health-fuel');
+        if (subFuelH) {
+            subFuelH.innerText = combH + '% ' + (h.combustion >= 85 ? 'OPTIMAL' : 'DEGRADED');
+            subFuelH.className = h.combustion >= 85 ? "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" : "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-amber/10 text-eng-amber";
+        }
+        if (m.fuel_flow_lph != null) document.getElementById('sub-fuel-flow').innerText = Number(m.fuel_flow_lph).toFixed(2) + ' L/h';
+        if (m.fuel_pressure_bar != null) document.getElementById('sub-fuel-p').innerText = Number(m.fuel_pressure_bar).toFixed(2) + ' bar';
+        if (m.injection_timing_deg != null) document.getElementById('sub-fuel-timing').innerText = Number(m.injection_timing_deg).toFixed(1) + '°';
+
+        // --- 3. LUBRICATION SYSTEM ---
+        var lubH = h.lubrication != null ? Number(h.lubrication).toFixed(1) : '--';
+        var subLubH = document.getElementById('sub-health-lubrication');
+        if (subLubH) {
+            subLubH.innerText = lubH + '% ' + (h.lubrication >= 85 ? 'OPTIMAL' : h.lubrication >= 50 ? 'DEGRADED' : 'CRITICAL');
+            subLubH.className = h.lubrication >= 85 ? "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" : "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-red/10 text-eng-red";
+        }
+        if (m.oil_pressure_bar != null) document.getElementById('sub-lub-oilp').innerText = Number(m.oil_pressure_bar).toFixed(2) + ' bar';
+        if (m.oil_temp_c != null) document.getElementById('sub-lub-oilt').innerText = Number(m.oil_temp_c).toFixed(1) + ' °C';
+        if (m.vib_kurtosis != null) document.getElementById('sub-lub-kurt').innerText = Number(m.vib_kurtosis).toFixed(2);
+        var isLubFault = (fault && fault.class === 'LUBRICATION_FAILURE') || (m.oil_pressure_bar && m.oil_pressure_bar < 2.0);
+        var cardLub = document.getElementById('card-lubrication');
+        var diagLub = document.getElementById('sub-lub-diag');
+        if (cardLub) {
+            if (isLubFault) {
+                cardLub.classList.add('fault-highlight');
+                if (diagLub) { diagLub.innerText = "OIL PRESSURE DEGRADATION"; diagLub.className = "text-eng-red font-bold"; }
+            } else {
+                cardLub.classList.remove('fault-highlight');
+                if (diagLub) { diagLub.innerText = "PRESSURE NOMINAL"; diagLub.className = "text-eng-green font-bold"; }
+            }
+        }
+
+        // --- 4. COOLING SYSTEM ---
+        var thermH = h.thermal != null ? Number(h.thermal).toFixed(1) : '--';
+        var subCoolH = document.getElementById('sub-health-cooling');
+        if (subCoolH) {
+            subCoolH.innerText = thermH + '% ' + (h.thermal >= 85 ? 'OPTIMAL' : h.thermal >= 50 ? 'DEGRADED' : 'CRITICAL');
+            subCoolH.className = h.thermal >= 85 ? "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" : "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-red/10 text-eng-red";
+        }
+        if (m.coolant_temp_c != null) document.getElementById('sub-cool-temp').innerText = Number(m.coolant_temp_c).toFixed(1) + ' °C';
+        if (d.cht_max_c != null) document.getElementById('sub-cool-chtmax').innerText = Number(d.cht_max_c).toFixed(1) + ' °C';
+        if (m.oat_c != null) document.getElementById('sub-cool-oat').innerText = Number(m.oat_c).toFixed(1) + ' °C';
+        var isCoolFault = fault && fault.class === 'COOLING_DEGRADATION';
+        var cardCool = document.getElementById('card-cooling');
+        var diagCool = document.getElementById('sub-cool-diag');
+        if (cardCool) {
+            if (isCoolFault) {
+                cardCool.classList.add('fault-highlight');
+                if (diagCool) { diagCool.innerText = "ELEVATED TEMPERATURE"; diagCool.className = "text-eng-red font-bold"; }
+            } else {
+                cardCool.classList.remove('fault-highlight');
+                if (diagCool) { diagCool.innerText = "THERMAL NOMINAL"; diagCool.className = "text-eng-green font-bold"; }
+            }
+        }
+
+        // --- 5. MECHANICAL SYSTEM ---
+        var mechH = h.mechanical != null ? Number(h.mechanical).toFixed(1) : '--';
+        var subMechH = document.getElementById('sub-health-mechanical');
+        if (subMechH) {
+            subMechH.innerText = mechH + '% ' + (h.mechanical >= 85 ? 'OPTIMAL' : 'DEGRADED');
+            subMechH.className = h.mechanical >= 85 ? "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" : "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-amber/10 text-eng-amber";
+        }
+        if (m.vib_rms_g != null) document.getElementById('sub-mech-vib').innerText = Number(m.vib_rms_g).toFixed(3) + ' g';
+        if (m.vib_1x_g != null) document.getElementById('sub-mech-1x').innerText = Number(m.vib_1x_g).toFixed(3) + ' g';
+        if (m.engine_load_pct != null) document.getElementById('sub-mech-load').innerText = Number(m.engine_load_pct).toFixed(1) + ' %';
+
+        // --- 6. ELECTRICAL SYSTEM ---
+        var elecH = h.electrical != null ? Number(h.electrical).toFixed(1) : '--';
+        var subElecH = document.getElementById('sub-health-electrical');
+        if (subElecH) {
+            subElecH.innerText = elecH + '% ' + (h.electrical >= 85 ? 'OPTIMAL' : 'DEGRADED');
+            subElecH.className = h.electrical >= 85 ? "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" : "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-red/10 text-eng-red";
+        }
+        if (m.battery_voltage_v != null) document.getElementById('sub-elec-volt').innerText = Number(m.battery_voltage_v).toFixed(2) + ' V';
+        if (m.alternator_current_a != null) document.getElementById('sub-elec-curr').innerText = Number(m.alternator_current_a).toFixed(2) + ' A';
+        var isElecFault = fault && fault.class === 'ELECTRICAL_FAULT';
+        var cardElec = document.getElementById('card-electrical');
+        var diagElec = document.getElementById('sub-elec-diag');
+        if (cardElec) {
+            if (isElecFault) {
+                cardElec.classList.add('fault-highlight');
+                if (diagElec) { diagElec.innerText = "CHARGING SYSTEM FAULT"; diagElec.className = "text-eng-red font-bold"; }
+            } else {
+                cardElec.classList.remove('fault-highlight');
+                if (diagElec) { diagElec.innerText = "CHARGING NORMAL"; diagElec.className = "text-eng-green font-bold"; }
+            }
+        }
+
+        // --- 7. AIR INTAKE SYSTEM ---
+        var subIntakeH = document.getElementById('sub-health-airintake');
+        if (subIntakeH) {
+            subIntakeH.innerText = combH + '% ' + (h.combustion >= 85 ? 'OPTIMAL' : 'DEGRADED');
+            subIntakeH.className = h.combustion >= 85 ? "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" : "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-amber/10 text-eng-amber";
+        }
+        if (m.map_kpa != null) document.getElementById('sub-intake-map').innerText = Number(m.map_kpa).toFixed(1) + ' kPa';
+        if (m.throttle_pct != null) document.getElementById('sub-intake-throt').innerText = Number(m.throttle_pct).toFixed(1) + ' %';
+        if (m.ambient_pressure_kpa != null) document.getElementById('sub-intake-pamb').innerText = Number(m.ambient_pressure_kpa).toFixed(1) + ' kPa';
+        var isIntakeFault = fault && fault.class === 'INTAKE_RESTRICTION';
+        var cardIntake = document.getElementById('card-airintake');
+        var diagIntake = document.getElementById('sub-intake-diag');
+        if (cardIntake) {
+            if (isIntakeFault) {
+                cardIntake.classList.add('fault-highlight');
+                if (diagIntake) { diagIntake.innerText = "INTAKE RESTRICTION"; diagIntake.className = "text-eng-red font-bold"; }
+            } else {
+                cardIntake.classList.remove('fault-highlight');
+                if (diagIntake) { diagIntake.innerText = "AIRFLOW UNRESTRICTED"; diagIntake.className = "text-eng-green font-bold"; }
+            }
+        }
+
+        // --- 8. EXHAUST SYSTEM ---
+        var subExhH = document.getElementById('sub-health-exhaust');
+        if (subExhH) {
+            subExhH.innerText = thermH + '% ' + (h.thermal >= 85 ? 'OPTIMAL' : 'DEGRADED');
+            subExhH.className = h.thermal >= 85 ? "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" : "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-amber/10 text-eng-amber";
+        }
+        if (m.egt_1_c != null) document.getElementById('sub-exh-egt1').innerText = Number(m.egt_1_c).toFixed(0) + ' °C';
+        if (m.egt_2_c != null) document.getElementById('sub-exh-egt2').innerText = Number(m.egt_2_c).toFixed(0) + ' °C';
+        if (d.egt_spread_z != null) document.getElementById('sub-exh-spread').innerText = Number(d.egt_spread_z).toFixed(2) + ' σ';
+
+        // --- 9. PROPULSION SYSTEM ---
+        var subPropH = document.getElementById('sub-health-propulsion');
+        if (subPropH) {
+            subPropH.innerText = phi + '% ' + (h.overall_index >= 85 ? 'OPTIMAL' : h.overall_index >= 50 ? 'DEGRADED' : 'CRITICAL');
+            subPropH.className = h.overall_index >= 85 ? "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-green/10 text-eng-green" : "text-[10px] font-mono font-bold px-2 py-0.5 rounded-xs bg-eng-red/10 text-eng-red";
+        }
+        if (m.rpm != null) document.getElementById('sub-prop-rpm').innerText = Number(m.rpm).toFixed(0);
+        if (m.altitude_m != null) document.getElementById('sub-prop-alt').innerText = Number(m.altitude_m).toFixed(0) + ' m';
+        if (h.overall_index != null) document.getElementById('sub-prop-phi').innerText = phi + ' %';
+        var diagProp = document.getElementById('sub-prop-diag');
+        if (diagProp) {
+            if (adv && adv.severity === 'CRITICAL') {
+                diagProp.innerText = "CRITICAL ADVISORY ACTIVE";
+                diagProp.className = "text-eng-red font-bold";
+            } else if (adv && adv.severity === 'WARNING') {
+                diagProp.innerText = "WARNING ADVISORY";
+                diagProp.className = "text-eng-amber font-bold";
+            } else {
+                diagProp.innerText = "THRUST NOMINAL";
+                diagProp.className = "text-eng-green font-bold";
+            }
+        }
+
+        // 5. Synchronize Telemetry Frame to Main Engine 3D Viewport
+        syncIframeTelemetry(state);
+    });
+
+    function syncIframeTelemetry(state) {
+        var frame = document.getElementById('tabhas-engine-frame');
+        if (frame && frame.contentWindow && state) {
+            try {
+                frame.contentWindow.postMessage({
+                    type: 'aero_twin_telemetry',
+                    state: state
+                }, '*');
+            } catch(e) {}
+        }
+    }
+
+    function updateClock() {
+        var now = new Date();
+        var utcStr = 'UTC ' + now.toTimeString().split(' ')[0];
+        var clockEl = document.getElementById('live-utc-clock');
+        if (clockEl) clockEl.innerText = utcStr;
+    }
+
+    window.addEventListener('load', function() {
+        updateClock();
+        setInterval(updateClock, 1000);
+    });
+</script>
+
+</body>
+</html>

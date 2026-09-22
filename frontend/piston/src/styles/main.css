@@ -1,0 +1,1136 @@
+/* 
+  AERO-TWIN Professional Aerospace Engineering Light Theme Stylesheet
+*/
+
+:root {
+  --bg-light: #f1f5f9;
+  --bg-grid-color: #cbd5e1;
+  --panel-bg: rgba(255, 255, 255, 0.94);
+  --panel-border: #cbd5e1;
+  --panel-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+  --text-dark: #0f172a;
+  --text-muted: #64748b;
+  --accent-blue: #0284c7;
+  --accent-blue-hover: #0369a1;
+  --accent-cyan: #06b6d4;
+  --accent-glow: rgba(2, 132, 199, 0.2);
+  
+  --status-green: #16a34a;
+  --status-amber: #d97706;
+  --status-red: #dc2626;
+
+  --font-mono: 'Chakra Petch', 'Courier New', monospace;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-light);
+  font-family: var(--font-body);
+  color: var(--text-dark);
+}
+
+/* Fullscreen WebGL Canvas Container */
+#canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+#webgl-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* SVG Overlay for Telemetry Connector Lines */
+#telemetry-svg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.telemetry-label-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.telemetry-left-column {
+  position: fixed;
+  left: 28px;
+  top: 92px;
+  bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 15;
+  width: 140px;
+}
+
+.telemetry-top-center {
+  position: fixed;
+  top: 82px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 15;
+}
+
+.telemetry-card, .dt-sensor-card {
+  pointer-events: auto;
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  background: rgba(10, 16, 28, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 6px;
+  padding: 6px 12px;
+  width: 140px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.telemetry-card:hover, .dt-sensor-card:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+}
+
+.telemetry-card .status-indicator, .dt-sensor-card .dt-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+  margin-bottom: 2px;
+}
+
+.telemetry-card .label-name, .dt-sensor-card .dt-sensor-title {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.telemetry-card .label-value, .dt-sensor-card .dt-sensor-val {
+  font-family: var(--font-mono);
+  font-size: 1.0rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.telemetry-endpoint {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 1.5px solid #0f172a;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 8;
+  box-shadow: 0 0 6px #22c55e;
+}
+
+/* Top Technical Header Bar */
+.top-nav-bar {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  right: 20px;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.brand-title-box {
+  pointer-events: auto;
+  background: var(--panel-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--panel-border);
+  padding: 10px 18px;
+  border-radius: 8px;
+  box-shadow: var(--panel-shadow);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-title-box h1 {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--text-dark);
+}
+
+.brand-title-box .sub-tag {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-left: 1px solid var(--panel-border);
+  padding-left: 10px;
+  font-family: var(--font-mono);
+}
+
+/* Mode Controls Segmented Switcher */
+.mode-controls-group {
+  pointer-events: auto;
+  background: var(--panel-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--panel-border);
+  padding: 4px;
+  border-radius: 8px;
+  box-shadow: var(--panel-shadow);
+  display: flex;
+  gap: 4px;
+}
+
+.btn-segment {
+  background: transparent;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-segment:hover {
+  color: var(--text-dark);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.btn-segment.active {
+  background: var(--text-dark);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   3D TELEMETRY SENSOR OVERLAY & LEADER LINES
+   ────────────────────────────────────────────────────────────────────────── */
+.telemetry-overlay-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 40;
+  overflow: hidden;
+}
+
+.telemetry-svg-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.dt-sensor-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+  background: rgba(10, 16, 28, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 6px;
+  padding: 6px 10px;
+  min-width: 110px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: border-color 0.2s ease, transform 0.05s linear;
+  will-change: transform;
+}
+
+.dt-sensor-card:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+}
+
+.dt-sensor-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.dt-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+  display: inline-block;
+}
+
+.dt-sensor-title {
+  font-family: 'Chakra Petch', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.dt-sensor-body {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.dt-sensor-val {
+  font-family: 'Chakra Petch', monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.dt-sensor-unit {
+  font-family: 'Chakra Petch', monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #38bdf8;
+}
+
+/* Tooltip toast for unavailable exploded view */
+.dt-toast-msg {
+  position: fixed;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(245, 158, 11, 0.6);
+  color: #fbbf24;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-family: 'Chakra Petch', monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  display: none;
+  animation: fadeInOut 3s forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -10px); }
+  15% { opacity: 1; transform: translate(-50%, 0); }
+  80% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -10px); }
+}
+
+.btn-action {
+  background: #ffffff;
+  border: 1px solid var(--panel-border);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent-blue);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-action:hover {
+  background: var(--accent-blue);
+  color: #ffffff;
+  border-color: var(--accent-blue);
+}
+
+.btn-action.active-exploded {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+/* Floating Telemetry Markers */
+.telemetry-label-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.telemetry-card {
+  position: absolute;
+  pointer-events: auto;
+  background: #ffffff;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  transform: translate(-50%, -50%);
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+}
+
+.telemetry-card .status-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--status-green);
+  box-shadow: 0 0 6px var(--status-green);
+}
+
+.telemetry-card .label-name {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.telemetry-card .label-value {
+  font-size: 0.82rem;
+  color: var(--text-dark);
+  font-weight: 700;
+}
+
+/* Screen Endpoint Marker */
+.telemetry-endpoint {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background-color: #ffffff;
+  border: 2px solid var(--accent-blue);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 6;
+  box-shadow: 0 0 6px var(--accent-blue);
+}
+
+/* 3D Sensor Markers & Component Labels in X-Ray Mode */
+.xray-labels-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 30;
+  overflow: hidden;
+}
+
+.xray-svg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 25;
+}
+
+.xray-component-label {
+  position: absolute;
+  pointer-events: auto;
+  cursor: pointer;
+  background: rgba(10, 16, 28, 0.90);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.40);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: #f8fafc;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+  z-index: 32;
+}
+
+.xray-component-label:hover {
+  border-color: #38bdf8;
+  background: rgba(2, 132, 199, 0.35);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+  transform: scale(1.04);
+}
+
+.xray-pinpoint-dot {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 1.5px solid #060b17;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 28;
+  box-shadow: 0 0 8px #22c55e;
+}
+
+.sensor-marker-3d {
+  position: absolute;
+  pointer-events: auto;
+  cursor: pointer;
+  background: var(--accent-blue);
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  transform: translate(-50%, -50%);
+  z-index: 12;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.sensor-marker-3d:hover {
+  transform: translate(-50%, -50%) scale(1.25);
+  background: var(--accent-cyan);
+}
+
+/* Right-Side Component Inspection Panel */
+.inspection-panel {
+  position: absolute;
+  top: 75px;
+  right: 20px;
+  width: 320px;
+  z-index: 25;
+  background: var(--panel-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--panel-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transform: translateX(360px);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  pointer-events: auto;
+}
+
+.inspection-panel.active {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--panel-border);
+  padding-bottom: 8px;
+}
+
+.panel-header .title {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-transform: uppercase;
+}
+
+.panel-header .category {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.panel-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.panel-close-btn:hover {
+  color: var(--text-dark);
+}
+
+/* Embedded SECOND 3D Component Inspection Viewport */
+.inspection-viewport-box {
+  background: #ffffff;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  height: 180px;
+  width: 100%;
+}
+
+.inspection-viewport-box .viewport-badge {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  z-index: 5;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.85);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--panel-border);
+  pointer-events: none;
+}
+
+#inspection-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Health Badge & Stat Grid */
+.health-badge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--panel-border);
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.health-badge-row .status-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--status-green);
+}
+
+.health-badge-row .health-value {
+  font-family: var(--font-mono);
+  font-size: 1.0rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.telemetry-tile {
+  background: #ffffff;
+  border: 1px solid var(--panel-border);
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.telemetry-tile .tile-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.telemetry-tile .tile-val {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-top: 1px;
+}
+
+.panel-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.btn-primary {
+  background: var(--text-dark);
+  color: #ffffff;
+  border: none;
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  width: 100%;
+}
+
+.btn-primary:hover {
+  background: #1e293b;
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: var(--text-dark);
+  border: 1px solid var(--panel-border);
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.btn-secondary:hover {
+  background: #f8fafc;
+  border-color: var(--text-dark);
+}
+
+.sim-tag-footer {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  text-align: center;
+  font-style: italic;
+}
+
+/* X-Ray Mode Banner Badge */
+.xray-mode-badge {
+  position: absolute;
+  top: 75px;
+  left: 20px;
+  z-index: 20;
+  background: rgba(2, 132, 199, 0.9);
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+  display: none;
+}
+
+.xray-mode-badge.active {
+  display: block;
+}
+
+/* Sensor Info Modal Dialog */
+.sensor-dialog {
+  position: absolute;
+  bottom: 30px;
+  left: 20px;
+  z-index: 30;
+  background: #ffffff;
+  border: 1px solid var(--panel-border);
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: var(--panel-shadow);
+  font-family: var(--font-mono);
+  max-width: 280px;
+  display: none;
+}
+
+.sensor-dialog.active {
+  display: block;
+}
+
+.sensor-dialog .dialog-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+  margin-bottom: 2px;
+}
+
+.sensor-dialog .dialog-val {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+/* Responsive Mobile Layout adjustments */
+@media (max-width: 768px) {
+  .top-nav-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .inspection-panel {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    transform: translateY(100%);
+  }
+  .inspection-panel.active {
+    transform: translateY(0);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   LIVE DIGITAL TWIN HUD  —  bottom status bar
+   ════════════════════════════════════════════════════════════════════ */
+#dt-hud {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: rgba(8, 18, 34, 0.88);
+  border-top: 1px solid rgba(2, 132, 199, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 7px 18px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.dt-hud-inner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.dt-hud-section {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(100, 116, 139, 0.25);
+  padding-right: 20px;
+}
+
+.dt-hud-section:last-child {
+  border-right: none;
+}
+
+.dt-hud-label {
+  font-size: 0.57rem;
+  letter-spacing: 0.10em;
+  color: #475569;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dt-hud-value {
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+/* ── Sync indicator ─────────────────────────────── */
+.dt-sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #475569;
+  transition: background 0.4s;
+}
+.dt-sync-dot.live {
+  background: #16a34a;
+  box-shadow: 0 0 6px #16a34a;
+  animation: dt-pulse 2s infinite;
+}
+.dt-sync-dot.offline {
+  background: #d97706;
+}
+@keyframes dt-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+.dt-sync-text {
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  white-space: nowrap;
+}
+.dt-sync-dot.live + .dt-sync-text {
+  color: #22c55e;
+}
+
+/* ── Attitude block ─────────────────────────────── */
+.dt-hud-attitude {
+  gap: 10px;
+}
+.dt-att-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.dt-att-axis {
+  font-size: 0.55rem;
+  color: #475569;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.dt-att-item > span:last-child {
+  color: #38bdf8;
+  font-weight: 700;
+  font-size: 0.72rem;
+  min-width: 44px;
+  text-align: right;
+}
+
+/* ── Health badge ───────────────────────────────── */
+.dt-health-badge {
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: rgba(22, 163, 74, 0.15);
+  border: 1px solid #16a34a;
+  color: #22c55e;
+  transition: background 0.4s, border-color 0.4s, color 0.4s;
+}
+.dt-health-badge.degraded {
+  background: rgba(217, 119, 6, 0.15);
+  border-color: #d97706;
+  color: #fbbf24;
+}
+.dt-health-badge.critical {
+  background: rgba(220, 38, 38, 0.18);
+  border-color: #dc2626;
+  color: #f87171;
+  animation: dt-pulse 1s infinite;
+}
+
+/* ── EKF residuals grid ─────────────────────────── */
+.dt-hud-residuals {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.dt-residual-grid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+.dt-res-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.dt-res-key {
+  font-size: 0.52rem;
+  color: #475569;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+/* ── Diagnostics Cards (Matching Reference Photo) ───────────────── */
+.dt-hud-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 0 16px;
+  border-right: 1px solid rgba(100, 116, 139, 0.25);
+}
+
+.dt-card-title {
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.dt-card-main-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.dt-card-sub-tag {
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.text-green { color: #22c55e !important; }
+.text-cyan  { color: #38bdf8 !important; }
+.text-slate { color: #cbd5e1 !important; }
+.text-white { color: #f8fafc !important; }
+.text-amber { color: #f59e0b !important; }
+.text-red   { color: #ef4444 !important; }
+
+/* ════════════════════════════════════════════════════════════════════
+   VIEW CONTROLS FLOATING WIDGET (Bottom-Left Matching Reference)
+   ════════════════════════════════════════════════════════════════════ */
+.dt-view-controls-panel {
+  position: fixed;
+  bottom: 85px;
+  left: 20px;
+  z-index: 210;
+  background: rgba(6, 13, 25, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--font-mono);
+}
+
+.dt-vc-header {
+  font-size: 0.62rem;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.dt-vc-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  border-radius: 5px;
+  color: #cbd5e1;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dt-vc-item:hover {
+  background: rgba(2, 132, 199, 0.25);
+  border-color: #0284c7;
+  color: #38bdf8;
+  transform: translateX(2px);
+}
+
+.dt-vc-item.active {
+  background: rgba(2, 132, 199, 0.4);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.dt-vc-icon {
+  font-size: 0.75rem;
+  color: #38bdf8;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   TOP-RIGHT CIRCULAR RPM GAUGE (Matching Reference Photo)
+   ════════════════════════════════════════════════════════════════════ */
+.dt-gauge-widget {
+  position: fixed;
+  top: 75px;
+  right: 25px;
+  width: 90px;
+  height: 90px;
+  z-index: 150;
+  background: rgba(6, 13, 25, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 50%;
+  padding: 5px;
+  box-shadow: 0 0 15px rgba(2, 132, 199, 0.2);
+}
+
+.dt-gauge-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.dt-gauge-bg-circle {
+  fill: none;
+  stroke: rgba(100, 116, 139, 0.2);
+  stroke-width: 6;
+}
+
+.dt-gauge-prog-circle {
+  fill: none;
+  stroke: #22c55e;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 200 251.32;
+  transition: stroke-dasharray 0.4s ease, stroke 0.4s ease;
+}
+
+.dt-gauge-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+.dt-gauge-rpm-val {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.dt-gauge-unit {
+  font-size: 0.52rem;
+  color: #64748b;
+  font-weight: 700;
+}

@@ -1,0 +1,17 @@
+{
+  "cap_min": 10.0,
+  "test": {
+    "mae_min": 1.153,
+    "rmse_min": 1.458,
+    "coverage": 0.808,
+    "optimistic_frac": 0.255,
+    "asym": 0.108
+  },
+  "holdout_engine": {
+    "mae_min": 1.052,
+    "rmse_min": 1.361,
+    "coverage": 0.831,
+    "optimistic_frac": 0.553,
+    "asym": 0.139
+  }
+}

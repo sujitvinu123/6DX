@@ -1,0 +1,18 @@
+{
+  "classes": [
+    "BEARING_WEAR",
+    "COMBUSTION_INSTABILITY",
+    "COOLING_DEGRADATION",
+    "ELECTRICAL_FAULT",
+    "FUEL_SYSTEM_FAULT",
+    "INJECTOR_ABNORMALITY",
+    "INTAKE_RESTRICTION",
+    "LUBRICATION_FAILURE",
+    "MISFIRE",
+    "SENSOR_DRIFT",
+    "SENSOR_FAILURE"
+  ],
+  "test_accuracy": 0.9738,
+  "early_accuracy": 0.9496,
+  "n_features": 243
+}

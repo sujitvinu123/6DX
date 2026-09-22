@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AERO-TWIN — Subsystems 3D Digital Twin</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+    <meta name="description" content="Standalone 3D Digital Twin Subsystem Modules with Real-Time Telemetry and Interactive 3D Inspection." />
+    <script type="module" crossorigin src="/assets/index-CITrmtYV.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DtnoEGna.css">
+    <style>
+      html, body {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      #app, #viewport-container, canvas {
+        background-color: #ffffff !important;
+      }
+
+      /* Clean White & Light Engineering Styling */
+      .dock-panel, .telemetry-panel {
+        background: rgba(255, 255, 255, 0.94) !important;
+        border-color: rgba(0, 127, 134, 0.25) !important;
+        color: #0f172a !important;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08) !important;
+      }
+      .panel-header {
+        border-bottom-color: rgba(0, 127, 134, 0.2) !important;
+      }
+      .panel-title {
+        color: #0f172a !important;
+      }
+      .panel-subtitle, .stat-label, .metric-label {
+        color: #64748b !important;
+      }
+      .stat-value, .metric-value {
+        color: #0f172a !important;
+      }
+
+      /* In card mode (when embedded in digital-twin.html dashboard cards) */
+      body.card-view .hud-top-bar,
+      body.card-view .hud-left-dock,
+      body.card-view .hud-right-dock,
+      body.card-view .hud-bottom-bar,
+      body.card-view .system-switch-nav,
+      body.card-view .brand-badge {
+        display: none !important;
+      }
+      body.card-view, body.card-view #app, body.card-view #viewport-container {
+        background: #ffffff !important;
+      }
+    </style>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const isCard = params.get('card') === 'true';
+      if (isCard) {
+        document.documentElement.classList.add('card-view');
+        window.addEventListener('DOMContentLoaded', () => {
+          document.body && document.body.classList.add('card-view');
+        });
+      }
+
+      const sysMap = {
+        'combustion': 'Combustion System (SYS-01)',
+        'fuel': 'Fuel System (SYS-02)',
+        'lubrication': 'Lubrication System (SYS-03)',
+        'cooling': 'Cooling System (SYS-04)',
+        'mechanical': 'Mechanical Power Transmission (SYS-05)',
+        'airIntake': 'Air Intake & Turbocharger (SYS-06)',
+        'electrical': 'Electrical Generation & Ignition (SYS-07)',
+        'exhaust': 'Exhaust Gas & Turbines (SYS-08)',
+        'propulsion': 'Propulsion & Variable Pitch (SYS-09)'
+      };
+      const sysKey = params.get('system') || 'combustion';
+      if (sysMap[sysKey]) {
+        document.title = `${sysMap[sysKey]} | AERO-TWIN 3D`;
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <div id="viewport-container" class="viewport-container"></div>
+    </div>
+  </body>
+</html>
